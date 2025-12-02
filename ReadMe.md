@@ -4,12 +4,12 @@ Production-ready calorie tracking application with AI chatbot assistant, built w
 
 ## Technical Stack
 
-Vanilla JavaScript (ES6+), HTML5, CSS3  
+Vanilla JavaScript (ES6+), HTML5, CSS3, Python  
 4,500+ lines of code, 200KB bundle, zero dependencies
 
 ## Key Features
 
-**AI Chatbot Assistant**  
+**AI  Chatbot Assistant**  
 Intelligent conversational interface with natural language processing, context-aware responses, and comprehensive knowledge base covering app features, nutrition advice, and technical support
 
 **Custom Data Visualization**  
