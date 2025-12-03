@@ -1,6 +1,6 @@
 # CaloCount Pro
 
-Production-ready calorie tracking application with AI chatbot assistant, built with vanilla JavaScript, demonstrating advanced front-end engineering and algorithmic problem-solving.
+Production-ready calorie tracking application with AI chatbot assistant, built with vanilla JavaScript, demonstrating advanced front-end engineering and algorithmic problem-solving
 
 ## Technical Stack
 
