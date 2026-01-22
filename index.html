@@ -3,41 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CaloCount Pro - AI Calorie Tracking</title>
-  
-  <!-- Fonts -->
+  <meta name="description" content="SignalBoard - Internal customer feedback aggregation and analysis tool for product teams" />
+  <meta name="author" content="Emmanuel Ahishakiye" />
+  <title>SignalBoard - Customer Feedback Signals</title>
+
+  <!-- Preconnect for performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  
-  <!-- Main Stylesheet -->
+
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="advanced.css" />
   <link rel="stylesheet" href="mobile-responsive.css" />
   <link rel="stylesheet" href="chatbot.css" />
 </head>
+
 <body>
   <!-- Loading Overlay -->
-  <div id="loading-overlay" class="loading-overlay hidden">
-    <div class="loading-spinner"></div>
-    <p class="loading-text">Analyzing your meal...</p>
+  <div id="loading-overlay" class="loading-overlay hidden" role="alert" aria-live="polite">
+    <div class="loading-spinner" aria-label="Loading"></div>
+    <p class="loading-text">Analyzing customer feedback...</p>
   </div>
 
   <!-- Toast Notification -->
-  <div id="toast" class="toast hidden">
+  <div id="toast" class="toast hidden" role="status" aria-live="polite">
     <span id="toast-message"></span>
   </div>
 
-  <!-- Main App Container -->
   <div id="app" class="app-container">
-    
+
     <!-- Sidebar Navigation -->
-    <aside class="sidebar">
+    <aside class="sidebar" role="navigation" aria-label="Main navigation">
       <div class="sidebar-header">
         <div class="logo">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect width="32" height="32" rx="8" fill="url(#gradient)" />
-            <path d="M16 8C13.79 8 12 9.79 12 12C12 14.21 13.79 16 16 16C18.21 16 20 14.21 20 12C20 9.79 18.21 8 16 8ZM16 20C11.58 20 8 21.79 8 24V26H24V24C24 21.79 20.42 20 16 20Z" fill="white" />
+            <path d="M10 12h12M10 16h12M10 20h8" stroke="white" stroke-width="2" stroke-linecap="round"/>
             <defs>
               <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
                 <stop offset="0%" stop-color="#6366f1" />
@@ -45,438 +47,319 @@
               </linearGradient>
             </defs>
           </svg>
-          <span class="logo-text">CaloCount</span>
+          <span class="logo-text">SignalBoard</span>
         </div>
-        <p class="logo-subtitle">AI-Powered Tracking</p>
+        <p class="logo-subtitle">Customer feedback signals</p>
       </div>
 
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-view="dashboard">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
-          <span>Dashboard</span>
+        <button class="nav-item active" data-view="dashboard" aria-current="page">
+          <span>📊 Overview</span>
         </button>
-
-        <button class="nav-item" data-view="camera">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
-          </svg>
-          <span>Scan Meal</span>
+        <button class="nav-item" data-view="capture">
+          <span>📥 Capture</span>
         </button>
-
         <button class="nav-item" data-view="history">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
-          </svg>
-          <span>History</span>
+          <span>📋 Timeline</span>
         </button>
-
-        <button class="nav-item" data-view="plans">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-          </svg>
-          <span>Plans</span>
+        <button class="nav-item" data-view="benchmarks">
+          <span>⚖️ Benchmarks</span>
         </button>
-
         <button class="nav-item" data-view="analytics">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-          </svg>
-          <span>Analytics</span>
+          <span>📈 Insights</span>
         </button>
-
         <button class="nav-item" data-view="profile">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-          </svg>
-          <span>Profile</span>
+          <span>👤 Profile</span>
         </button>
       </nav>
 
       <div class="sidebar-footer">
         <div class="theme-toggle">
-          <svg class="theme-icon" width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" />
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
           </svg>
+          <span>Dark Mode</span>
           <label class="switch">
-            <input type="checkbox" id="theme-switch" />
-            <span class="switch-slider"></span>
+            <input type="checkbox" id="theme-switch" aria-label="Toggle dark mode">
+            <span class="slider"></span>
           </label>
         </div>
       </div>
     </aside>
 
     <!-- Main Content Area -->
-    <main class="main-content">
-      
-      <!-- Dashboard View -->
-      <section id="dashboard-view" class="view active">
+    <main class="main-content" role="main">
+
+      <!-- Dashboard / Overview -->
+      <section id="dashboard-view" class="view active" aria-labelledby="dashboard-title">
         <header class="view-header">
           <div>
-            <h1 class="view-title">Dashboard</h1>
-            <p class="view-subtitle">Track your daily nutrition goals</p>
+            <h1 id="dashboard-title" class="view-title">Overview</h1>
+            <p class="view-subtitle">Daily impact, progress, and signal distribution</p>
           </div>
-          <button class="btn-primary" onclick="switchView('camera')">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
+          <button class="btn-primary" onclick="switchView('capture')">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
             </svg>
-            Scan Meal
+            Capture Signal
           </button>
         </header>
 
-        <!-- Stats Cards -->
+        <!-- KPI Metrics -->
         <div class="stats-grid">
-          <div class="stat-card calories">
+          <div class="stat-card">
             <div class="stat-header">
-              <div class="stat-icon">
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" />
-                </svg>
+              <span class="stat-icon">📊</span>
+              <h3 class="stat-label">Daily Impact</h3>
+            </div>
+            <div class="stat-value" id="daily-impact">324</div>
+            <div class="stat-meta">
+              <span class="stat-change positive">↑ 12%</span>
+              <span>vs yesterday</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 78%"></div>
               </div>
-              <h3 class="stat-title">Calories</h3>
             </div>
-            <div class="stat-content">
-              <div class="stat-value">
-                <span id="calories-consumed">0</span>
-                <span class="stat-divider">/</span>
-                <span id="calories-target">2000</span>
-              </div>
-              <p class="stat-label">kcal</p>
-            </div>
-            <div class="progress-bar">
-              <div id="calories-progress" class="progress-fill calories-fill" style="width: 0%"></div>
-            </div>
-            <p class="stat-footer" id="calories-remaining">2000 kcal remaining</p>
           </div>
 
-          <div class="stat-card protein">
+          <div class="stat-card">
             <div class="stat-header">
-              <div class="stat-icon">
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                </svg>
+              <span class="stat-icon">🎯</span>
+              <h3 class="stat-label">Benchmark Progress</h3>
+            </div>
+            <div class="stat-value" id="benchmark-value">87%</div>
+            <div class="stat-meta">
+              <span class="stat-change positive">On track</span>
+              <span>Target: 1000</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar">
+                <div class="progress-fill success" style="width: 87%"></div>
               </div>
-              <h3 class="stat-title">Protein</h3>
             </div>
-            <div class="stat-content">
-              <div class="stat-value">
-                <span id="protein-consumed">0</span>
-                <span class="stat-divider">/</span>
-                <span id="protein-target">150</span>
-              </div>
-              <p class="stat-label">grams</p>
-            </div>
-            <div class="progress-bar">
-              <div id="protein-progress" class="progress-fill protein-fill" style="width: 0%"></div>
-            </div>
-            <p class="stat-footer" id="protein-remaining">150g remaining</p>
           </div>
 
-          <div class="stat-card carbs">
+          <div class="stat-card">
             <div class="stat-header">
-              <div class="stat-icon">
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" />
-                </svg>
+              <span class="stat-icon">🔥</span>
+              <h3 class="stat-label">Critical Signals</h3>
+            </div>
+            <div class="stat-value" id="critical-signals">7</div>
+            <div class="stat-meta">
+              <span class="stat-change negative">+2 new</span>
+              <span>Require action</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar">
+                <div class="progress-fill error" style="width: 35%"></div>
               </div>
-              <h3 class="stat-title">Carbs</h3>
             </div>
-            <div class="stat-content">
-              <div class="stat-value">
-                <span id="carbs-consumed">0</span>
-                <span class="stat-divider">/</span>
-                <span id="carbs-target">200</span>
-              </div>
-              <p class="stat-label">grams</p>
-            </div>
-            <div class="progress-bar">
-              <div id="carbs-progress" class="progress-fill carbs-fill" style="width: 0%"></div>
-            </div>
-            <p class="stat-footer" id="carbs-remaining">200g remaining</p>
           </div>
 
-          <div class="stat-card fats">
+          <div class="stat-card">
             <div class="stat-header">
-              <div class="stat-icon">
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" />
-                </svg>
+              <span class="stat-icon">📈</span>
+              <h3 class="stat-label">Signal Velocity</h3>
+            </div>
+            <div class="stat-value" id="signal-velocity">42</div>
+            <div class="stat-meta">
+              <span class="stat-change neutral">Steady</span>
+              <span>signals/week</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 65%"></div>
               </div>
-              <h3 class="stat-title">Fats</h3>
             </div>
-            <div class="stat-content">
-              <div class="stat-value">
-                <span id="fats-consumed">0</span>
-                <span class="stat-divider">/</span>
-                <span id="fats-target">65</span>
-              </div>
-              <p class="stat-label">grams</p>
-            </div>
-            <div class="progress-bar">
-              <div id="fats-progress" class="progress-fill fats-fill" style="width: 0%"></div>
-            </div>
-            <p class="stat-footer" id="fats-remaining">65g remaining</p>
           </div>
         </div>
 
-        <!-- Recent Meals -->
+        <!-- Recent Signals List -->
         <div class="section-header">
-          <h2 class="section-title">Today's Meals</h2>
-          <button class="btn-secondary btn-sm" onclick="clearTodayMeals()">Clear All</button>
+          <h2 class="section-title">Recent Signals</h2>
+          <button class="btn-secondary" onclick="clearTodaySignals()">Clear Today</button>
         </div>
-        
-        <div id="recent-meals" class="meals-grid">
+
+        <div class="signals-grid" id="recent-signals">
           <div class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3">
-              <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
+            <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3" aria-hidden="true">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
             </svg>
-            <p>No meals tracked yet today</p>
-            <button class="btn-primary" onclick="switchView('camera')" style="margin-top: 1rem;">Scan Your First Meal</button>
+            <p>No signals captured yet today</p>
+            <button class="btn-primary" onclick="switchView('capture')">Capture First Signal</button>
           </div>
         </div>
       </section>
 
-      <!-- Camera/Scan View -->
-      <section id="camera-view" class="view">
+      <!-- Capture Signal -->
+      <section id="capture-view" class="view">
         <header class="view-header">
           <div>
-            <h1 class="view-title">Scan Meal</h1>
-            <p class="view-subtitle">Take a photo or upload an image</p>
+            <h1 class="view-title">Capture Signal</h1>
+            <p class="view-subtitle">Ingest feedback from any source</p>
           </div>
           <button class="btn-secondary" onclick="switchView('dashboard')">Cancel</button>
         </header>
 
-        <div class="camera-container">
-          <!-- Camera Controls -->
-          <div class="camera-controls">
-            <input type="file" id="file-input" accept="image/*" style="display: none;" />
-            
+        <div class="capture-container">
+          <div class="capture-options">
             <button class="btn-control" id="upload-btn">
               <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" />
               </svg>
-              Upload Photo
+              <span>Upload CSV</span>
+              <small>Bulk import from support tickets</small>
             </button>
-
-            <button class="btn-control" id="camera-btn">
+            <button class="btn-control" id="paste-btn">
               <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
               </svg>
-              Use Camera
+              <span>Paste Feedback</span>
+              <small>Direct text input</small>
+            </button>
+            <button class="btn-control" id="github-btn">
+              <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" />
+              </svg>
+              <span>GitHub Issues</span>
+              <small>Import from repository</small>
             </button>
           </div>
 
-          <!-- Video Stream -->
-          <div id="video-container" class="video-container hidden">
-            <video id="video-stream" autoplay playsinline></video>
-            <canvas id="canvas" style="display: none;"></canvas>
+          <input type="file" id="file-input" accept=".csv,.txt" style="display: none" />
+
+          <!-- Signal Form -->
+          <div id="signal-form-container" class="signal-form-container hidden">
+            <h3 class="section-title">Signal Details</h3>
             
-            <div class="camera-overlay">
-              <div class="camera-actions">
-                <button class="btn-capture" id="capture-btn">
-                  <div class="capture-circle"></div>
-                </button>
-                <button class="btn-icon" id="switch-camera-btn" title="Switch Camera">
-                  <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4z" />
-                    <path d="M10 13a3 3 0 100-6 3 3 0 000 6z" />
-                  </svg>
-                </button>
-                <button class="btn-icon" id="close-camera-btn" title="Close Camera">
-                  <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Image Preview -->
-          <div id="preview-container" class="preview-container hidden">
-            <img id="preview-image" alt="Meal preview" />
-            <div class="preview-actions">
-              <button class="btn-secondary" id="retake-btn">Retake Photo</button>
-              <button class="btn-primary" id="analyze-btn">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-                </svg>
-                Analyze Meal
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Analysis Results -->
-        <div id="analysis-results" class="analysis-results hidden">
-          <h3 class="results-title">Analysis Results</h3>
-          
-          <div class="meal-form">
-            <div class="form-group">
-              <label for="meal-name">Meal Name</label>
-              <input type="text" id="meal-name" class="form-input" placeholder="e.g., Grilled Chicken Salad" />
-            </div>
-
-            <div class="form-row">
+            <form id="signal-form" class="signal-form">
               <div class="form-group">
-                <label for="meal-calories">Calories</label>
-                <div class="input-with-unit">
-                  <input type="number" id="meal-calories" class="form-input" placeholder="0" />
-                  <span class="input-unit">kcal</span>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="meal-protein">Protein</label>
-                <div class="input-with-unit">
-                  <input type="number" id="meal-protein" class="form-input" placeholder="0" />
-                  <span class="input-unit">g</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="meal-carbs">Carbs</label>
-                <div class="input-with-unit">
-                  <input type="number" id="meal-carbs" class="form-input" placeholder="0" />
-                  <span class="input-unit">g</span>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="meal-fats">Fats</label>
-                <div class="input-with-unit">
-                  <input type="number" id="meal-fats" class="form-input" placeholder="0" />
-                  <span class="input-unit">g</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Portion Size</label>
-              <div class="portion-buttons">
-                <button class="portion-btn" data-portion="0.5">Small</button>
-                <button class="portion-btn active" data-portion="1">Regular</button>
-                <button class="portion-btn" data-portion="1.5">Large</button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="meal-notes">Notes (optional)</label>
-              <textarea id="meal-notes" class="form-textarea" rows="3" placeholder="Add any additional notes..."></textarea>
-            </div>
-
-            <button class="btn-primary btn-full" id="save-meal-btn">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-              </svg>
-              Save Meal
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- History View -->
-      <section id="history-view" class="view">
-        <header class="view-header">
-          <div>
-            <h1 class="view-title">Meal History</h1>
-            <p class="view-subtitle">View your tracked meals</p>
-          </div>
-          <select id="history-filter" class="select-input">
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="all">All Time</option>
-          </select>
-        </header>
-
-        <div id="history-list" class="history-list">
-          <!-- History items will be inserted here -->
-        </div>
-      </section>
-
-      <!-- Plans View -->
-      <section id="plans-view" class="view">
-        <header class="view-header">
-          <div>
-            <h1 class="view-title">Nutrition Plans</h1>
-            <p class="view-subtitle">Manage your daily goals</p>
-          </div>
-          <button class="btn-primary" onclick="showCreatePlan()">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
-            </svg>
-            Create Plan
-          </button>
-        </header>
-
-        <div id="plans-list" class="plans-list">
-          <!-- Plans will be inserted here -->
-        </div>
-
-        <!-- Create Plan Modal -->
-        <div id="create-plan-modal" class="modal hidden">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3 class="modal-title">Create Nutrition Plan</h3>
-              <button class="btn-icon" onclick="hideCreatePlan()">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
-                </svg>
-              </button>
-            </div>
-            
-            <form id="plan-form" class="plan-form">
-              <div class="form-group">
-                <label for="plan-name">Plan Name</label>
-                <input type="text" id="plan-name" class="form-input" placeholder="e.g., Weight Loss" required />
+                <label class="form-label">Signal Title</label>
+                <input type="text" id="signal-title" class="form-input" placeholder="e.g., Workers timeout under high load in EU region" required />
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="plan-calories">Daily Calories</label>
-                  <input type="number" id="plan-calories" class="form-input" placeholder="2000" required />
+                  <label class="form-label">Impact Score</label>
+                  <input type="number" id="signal-impact" class="form-input" placeholder="0-100" min="0" max="100" />
+                  <small class="form-help">Normalized user + business effect</small>
                 </div>
-
                 <div class="form-group">
-                  <label for="plan-protein">Protein (g)</label>
-                  <input type="number" id="plan-protein" class="form-input" placeholder="150" required />
+                  <label class="form-label">Urgency</label>
+                  <select id="signal-urgency" class="form-input">
+                    <option value="1">Low</option>
+                    <option value="2">Medium</option>
+                    <option value="3" selected>High</option>
+                    <option value="4">Critical</option>
+                  </select>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="plan-carbs">Carbs (g)</label>
-                  <input type="number" id="plan-carbs" class="form-input" placeholder="200" required />
+                  <label class="form-label">Source</label>
+                  <select id="signal-source" class="form-input">
+                    <option value="github">GitHub Issues</option>
+                    <option value="support">Support Tickets</option>
+                    <option value="community">Community Forum</option>
+                    <option value="sales">Sales Team</option>
+                    <option value="internal">Internal Team</option>
+                  </select>
                 </div>
-
                 <div class="form-group">
-                  <label for="plan-fats">Fats (g)</label>
-                  <input type="number" id="plan-fats" class="form-input" placeholder="65" required />
+                  <label class="form-label">Category</label>
+                  <select id="signal-category" class="form-input">
+                    <option value="bug">Bug / Reliability</option>
+                    <option value="feature">Feature Request</option>
+                    <option value="performance">Performance</option>
+                    <option value="ux">User Experience</option>
+                    <option value="documentation">Documentation</option>
+                  </select>
                 </div>
               </div>
 
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="hideCreatePlan()">Cancel</button>
-                <button type="submit" class="btn-primary">Create Plan</button>
+              <div class="form-group">
+                <label class="form-label">Customer Tier</label>
+                <select id="signal-tier" class="form-input">
+                  <option value="enterprise">Enterprise</option>
+                  <option value="pro">Pro</option>
+                  <option value="free">Free</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Context</label>
+                <textarea id="signal-context" class="form-textarea" rows="4" placeholder="Relevant background, affected regions, workarounds..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="hideSignalForm()">Cancel</button>
+                <button type="submit" class="btn-primary" id="save-signal-btn">Save Signal</button>
               </div>
             </form>
           </div>
         </div>
       </section>
 
-      <!-- Analytics View -->
+      <!-- Timeline / History -->
+      <section id="history-view" class="view">
+        <header class="view-header">
+          <div>
+            <h1 class="view-title">Signal Timeline</h1>
+            <p class="view-subtitle">Chronological view of all captured signals</p>
+          </div>
+          <div class="view-actions">
+            <select id="history-filter" class="form-select">
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+        </header>
+
+        <div id="timeline-list" class="timeline-list">
+          <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
+            </svg>
+            <p>No signals found for this period</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Benchmarks -->
+      <section id="benchmarks-view" class="view">
+        <header class="view-header">
+          <div>
+            <h1 class="view-title">Benchmarks</h1>
+            <p class="view-subtitle">Define baseline metrics to measure signal impact</p>
+          </div>
+          <button class="btn-primary" onclick="showCreateBenchmark()">Create Benchmark</button>
+        </header>
+
+        <div id="benchmarks-list" class="benchmarks-list">
+          <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+            </svg>
+            <p>No benchmarks defined yet</p>
+            <button class="btn-primary" onclick="showCreateBenchmark()">Create First Benchmark</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics & Insights -->
       <section id="analytics-view" class="view">
         <header class="view-header">
           <div>
-            <h1 class="view-title">Analytics</h1>
-            <p class="view-subtitle">AI-powered insights and predictions</p>
+            <h1 class="view-title">Insights</h1>
+            <p class="view-subtitle">AI-powered signal analysis and risk indicators</p>
           </div>
-          <button class="btn-secondary btn-sm" onclick="if(typeof refreshAnalytics === 'function') refreshAnalytics()">
+          <button class="btn-secondary" onclick="refreshInsights()">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" />
             </svg>
@@ -484,309 +367,162 @@
           </button>
         </header>
 
-        <!-- AI Insights Section -->
         <div class="section-header">
-          <h2 class="section-title">AI Insights</h2>
-          <p class="section-subtitle">Personalized recommendations based on your data</p>
+          <h2 class="section-title">Key Product Signals</h2>
+          <p class="section-description">AI-generated insights from recent feedback</p>
         </div>
 
-        <div id="insights-grid" class="insights-grid">
-          <div class="insight-card">
-            <div class="insight-icon">
-              <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" />
-              </svg>
-            </div>
+        <div class="insights-grid">
+          <div class="insight-card insight-alert">
+            <span class="insight-icon">🚨</span>
             <div class="insight-content">
-              <h4 class="insight-title">Track More Meals</h4>
-              <p class="insight-description">You've logged meals on 3 of the last 7 days. Consistent tracking improves accuracy of predictions.</p>
+              <h4 class="insight-title">Reliability Issues Increasing</h4>
+              <p class="insight-message">Timeout-related complaints increased 32% week over week, primarily from enterprise customers using Workers in APAC regions.</p>
             </div>
           </div>
 
-          <div class="insight-card">
-            <div class="insight-icon success">
-              <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-              </svg>
-            </div>
+          <div class="insight-card insight-warning">
+            <span class="insight-icon">⚠️</span>
             <div class="insight-content">
-              <h4 class="insight-title">Great Protein Intake</h4>
-              <p class="insight-description">Your average protein intake is 145g per day, which is excellent for your goals.</p>
+              <h4 class="insight-title">Feature Request Cluster</h4>
+              <p class="insight-message">12 enterprise customers requested native TypeScript support for Workers bindings. Quick win for developer experience.</p>
             </div>
           </div>
 
-          <div class="insight-card">
-            <div class="insight-icon warning">
-              <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" />
-              </svg>
-            </div>
+          <div class="insight-card insight-success">
+            <span class="insight-icon">✅</span>
             <div class="insight-content">
-              <h4 class="insight-title">Consider Your Meal Timing</h4>
-              <p class="insight-description">Most of your calories come after 6 PM. Earlier meals may help with energy levels.</p>
+              <h4 class="insight-title">Positive Sentiment Trend</h4>
+              <p class="insight-message">R2 pricing changes received 94% positive feedback from storage-heavy enterprise users.</p>
+            </div>
+          </div>
+
+          <div class="insight-card insight-info">
+            <span class="insight-icon">💡</span>
+            <div class="insight-content">
+              <h4 class="insight-title">Documentation Gap</h4>
+              <p class="insight-message">Support tickets show confusion around KV consistency model. Consider improving docs or adding examples.</p>
             </div>
           </div>
         </div>
 
-        <!-- Charts Section -->
         <div class="section-header" style="margin-top: 2rem;">
-          <h2 class="section-title">Nutrition Trends</h2>
-          <p class="section-subtitle">Visual breakdown of your progress</p>
+          <h2 class="section-title">Signal Trends</h2>
         </div>
 
-        <div class="charts-grid">
-          <!-- Calorie Trend Chart -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <h3 class="chart-title">Calorie Trend (14 Days)</h3>
-              <p class="chart-subtitle">Daily calorie intake vs target</p>
-            </div>
-            <div class="chart-container">
-              <canvas id="calorie-trend-chart"></canvas>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Weekly Signal Volume</h3>
+              <p class="chart-subtitle">Last 14 days</p>
             </div>
           </div>
-
-          <!-- Macro Distribution Chart -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <h3 class="chart-title">Macro Distribution</h3>
-              <p class="chart-subtitle">7-day average breakdown</p>
-            </div>
-            <div class="chart-container">
-              <canvas id="macro-donut-chart"></canvas>
-            </div>
-          </div>
-
-          <!-- Weekly Progress Chart -->
-          <div class="chart-card full-width">
-            <div class="chart-header">
-              <h3 class="chart-title">Weekly Progress</h3>
-              <p class="chart-subtitle">Comparing last 8 weeks</p>
-            </div>
-            <div class="chart-container">
-              <canvas id="weekly-progress-chart"></canvas>
-            </div>
-          </div>
+          <canvas id="trend-chart" width="800" height="300"></canvas>
         </div>
 
-        <!-- Predictions Section -->
         <div class="section-header" style="margin-top: 2rem;">
-          <h2 class="section-title">7-Day Predictions</h2>
-          <p class="section-subtitle">AI-powered forecasting based on your patterns</p>
+          <h2 class="section-title">Risk Forecast</h2>
         </div>
 
-        <div id="predictions-grid" class="predictions-grid">
+        <div class="predictions-grid">
           <div class="prediction-card">
             <div class="prediction-date">Tomorrow</div>
-            <div class="prediction-value">1,847 kcal</div>
+            <div class="prediction-value">47</div>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Expected signals</p>
             <div class="prediction-confidence">
               <div class="confidence-bar">
                 <div class="confidence-fill" style="width: 85%"></div>
               </div>
-              <span class="confidence-text">85% confidence</span>
             </div>
           </div>
 
           <div class="prediction-card">
-            <div class="prediction-date">Day 2</div>
-            <div class="prediction-value">1,923 kcal</div>
-            <div class="prediction-confidence">
-              <div class="confidence-bar">
-                <div class="confidence-fill" style="width: 82%"></div>
-              </div>
-              <span class="confidence-text">82% confidence</span>
-            </div>
-          </div>
-
-          <div class="prediction-card">
-            <div class="prediction-date">Day 3</div>
-            <div class="prediction-value">2,015 kcal</div>
-            <div class="prediction-confidence">
-              <div class="confidence-bar">
-                <div class="confidence-fill" style="width: 78%"></div>
-              </div>
-              <span class="confidence-text">78% confidence</span>
-            </div>
-          </div>
-
-          <div class="prediction-card">
-            <div class="prediction-date">Day 4</div>
-            <div class="prediction-value">1,891 kcal</div>
-            <div class="prediction-confidence">
-              <div class="confidence-bar">
-                <div class="confidence-fill" style="width: 75%"></div>
-              </div>
-              <span class="confidence-text">75% confidence</span>
-            </div>
-          </div>
-
-          <div class="prediction-card">
-            <div class="prediction-date">Day 5</div>
-            <div class="prediction-value">1,956 kcal</div>
+            <div class="prediction-date">Next Week</div>
+            <div class="prediction-value">312</div>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Expected signals</p>
             <div class="prediction-confidence">
               <div class="confidence-bar">
                 <div class="confidence-fill" style="width: 70%"></div>
               </div>
-              <span class="confidence-text">70% confidence</span>
             </div>
           </div>
 
           <div class="prediction-card">
-            <div class="prediction-date">Day 6</div>
-            <div class="prediction-value">2,078 kcal</div>
+            <div class="prediction-date">Churn Risk</div>
+            <div class="prediction-value">High</div>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">3 enterprise accounts</p>
             <div class="prediction-confidence">
               <div class="confidence-bar">
-                <div class="confidence-fill" style="width: 68%"></div>
+                <div class="confidence-fill" style="width: 92%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
               </div>
-              <span class="confidence-text">68% confidence</span>
-            </div>
-          </div>
-
-          <div class="prediction-card">
-            <div class="prediction-date">Day 7</div>
-            <div class="prediction-value">1,934 kcal</div>
-            <div class="prediction-confidence">
-              <div class="confidence-bar">
-                <div class="confidence-fill" style="width: 65%"></div>
-              </div>
-              <span class="confidence-text">65% confidence</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Achievements Section -->
-        <div class="section-header" style="margin-top: 2rem;">
-          <h2 class="section-title">Achievements</h2>
-          <p class="section-subtitle">Unlock badges as you reach your goals</p>
-        </div>
-
-        <div class="achievements-grid">
-          <div class="achievement-card locked">
-            <div class="achievement-icon">
-              <svg width="32" height="32" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
-              </svg>
-            </div>
-            <h4 class="achievement-title">7-Day Streak</h4>
-            <p class="achievement-description">Log meals for 7 consecutive days</p>
-            <div class="achievement-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 43%"></div>
-              </div>
-              <span class="progress-text">3/7 days</span>
-            </div>
-          </div>
-
-          <div class="achievement-card locked">
-            <div class="achievement-icon">
-              <svg width="32" height="32" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-              </svg>
-            </div>
-            <h4 class="achievement-title">Goal Crusher</h4>
-            <p class="achievement-description">Hit your calorie target 10 times</p>
-            <div class="achievement-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 20%"></div>
-              </div>
-              <span class="progress-text">2/10 times</span>
-            </div>
-          </div>
-
-          <div class="achievement-card locked">
-            <div class="achievement-icon">
-              <svg width="32" height="32" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z" />
-              </svg>
-            </div>
-            <h4 class="achievement-title">Protein Pro</h4>
-            <p class="achievement-description">Meet protein goals for 5 days</p>
-            <div class="achievement-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 60%"></div>
-              </div>
-              <span class="progress-text">3/5 days</span>
-            </div>
-          </div>
-
-          <div class="achievement-card locked">
-            <div class="achievement-icon">
-              <svg width="32" height="32" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
-              </svg>
-            </div>
-            <h4 class="achievement-title">Snap Master</h4>
-            <p class="achievement-description">Scan 20 meals with AI</p>
-            <div class="achievement-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 15%"></div>
-              </div>
-              <span class="progress-text">3/20 meals</span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Profile View -->
+      <!-- PM Profile -->
       <section id="profile-view" class="view">
         <header class="view-header">
           <div>
-            <h1 class="view-title">Profile</h1>
-            <p class="view-subtitle">Manage your account settings</p>
+            <h1 class="view-title">PM Profile</h1>
+            <p class="view-subtitle">Manage your product context and preferences</p>
           </div>
         </header>
 
-        <div class="profile-container">
-          <div class="profile-card">
+        <div class="profile-card">
+          <div class="profile-header">
             <div class="profile-avatar-wrapper">
-              <div class="profile-avatar" id="profile-avatar">
-                <img id="profile-avatar-img" class="profile-avatar-image hidden" alt="Profile" />
-                <svg id="profile-avatar-placeholder" width="64" height="64" viewBox="0 0 20 20" fill="currentColor">
+              <div class="profile-avatar" id="profile-avatar-placeholder">
+                <svg width="48" height="48" viewBox="0 0 20 20" fill="white">
                   <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                 </svg>
               </div>
-              <button class="profile-avatar-edit" id="edit-avatar-btn" type="button">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
-                </svg>
-              </button>
+              <img id="profile-avatar-img" class="profile-avatar-image hidden" alt="Profile" />
+              <button type="button" class="profile-avatar-edit" id="edit-avatar-btn">✏️</button>
               <input type="file" id="avatar-upload" accept="image/*" style="display: none;" />
             </div>
-            <h2 class="profile-name" id="profile-display-name">Alex Johnson</h2>
-            <p class="profile-email" id="profile-display-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a1b161f023a1f021b170a161f54191517">[email&#160;protected]</a></p>
+            <div class="profile-info">
+              <h2 class="profile-name" id="profile-display-name">Emmanuel Ahishakiye</h2>
+              <p class="profile-email" id="profile-display-email">emmanuel@cloudflare.com</p>
+            </div>
           </div>
 
           <form id="profile-form" class="profile-form">
             <div class="form-group">
-              <label for="user-name">Name</label>
-              <input type="text" id="user-name" class="form-input" value="Alex Johnson" />
+              <label class="form-label">Full Name</label>
+              <input type="text" id="user-name" class="form-input" value="Emmanuel Ahishakiye" required />
             </div>
 
             <div class="form-group">
-              <label for="user-email">Email</label>
-              <input type="email" id="user-email" class="form-input" value="alex@example.com" />
+              <label class="form-label">Work Email</label>
+              <input type="email" id="user-email" class="form-input" value="emmanuel@cloudflare.com" required />
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="user-age">Age</label>
-                <input type="number" id="user-age" class="form-input" placeholder="25" />
+                <label class="form-label">Product Area</label>
+                <select id="user-product-area" class="form-input">
+                  <option>Developer Platform</option>
+                  <option>Network Services</option>
+                  <option>Security</option>
+                  <option>Analytics & Logs</option>
+                  <option>Workers & Pages</option>
+                </select>
               </div>
 
               <div class="form-group">
-                <label for="user-weight">Weight (kg)</label>
-                <input type="number" id="user-weight" class="form-input" placeholder="70" />
+                <label class="form-label">Team</label>
+                <input type="text" id="user-team" class="form-input" value="Product Management" />
               </div>
             </div>
 
             <div class="form-group">
-              <label for="user-goal">Fitness Goal</label>
-              <select id="user-goal" class="select-input">
-                <option value="lose">Lose Weight</option>
-                <option value="maintain">Maintain Weight</option>
-                <option value="gain">Gain Muscle</option>
+              <label class="form-label">Focus Area</label>
+              <select id="user-focus" class="form-input">
+                <option value="reliability">Reliability & Performance</option>
+                <option value="growth">Growth & Adoption</option>
+                <option value="enterprise">Enterprise Features</option>
+                <option value="devex">Developer Experience</option>
               </select>
             </div>
 
@@ -797,15 +533,14 @@
 
     </main>
   </div>
-  
-  <!-- JavaScript file -->
-  <!-- JavaScript -->
+
+  <!-- Scripts -->
   <script src="app.js"></script>
   <script src="analytics.js"></script>
-  <script src="animations.js"></script>
+  <script src="animation.js"></script>
   <script src="integration.js"></script>
   <script src="mobile-enhancements.js"></script>
   <script src="chatbot.js"></script>
   <script src="demo.js"></script>
 </body>
-</html><
+</html>

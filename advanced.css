@@ -1,10 +1,11 @@
 /* ===================================
-   ADVANCED FEATURES CSS
-   Analytics, Charts, Insights, Achievements
+   SIGNALBOARD ADVANCED UI LAYER
+   Product Insights, Trends, Forecasts, Risk Analysis
+   Author: Emmanuel Ahishakiye
    =================================== */
 
 /* ===================================
-   INSIGHTS SECTION
+   PRODUCT INSIGHTS
    =================================== */
 .insights-section {
   margin-bottom: var(--spacing-2xl);
@@ -12,7 +13,7 @@
 
 .insights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
 }
@@ -33,11 +34,10 @@
 .insight-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0 0 auto 0;
   height: 4px;
   transition: opacity var(--transition-base);
+  opacity: 1;
 }
 
 .insight-card.insight-success::before {
@@ -73,8 +73,12 @@
 }
 
 @keyframes floatAnimation {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { 
+    transform: translateY(0); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
 }
 
 .insight-content {
@@ -85,13 +89,13 @@
   font-size: var(--font-size-lg);
   font-weight: 700;
   margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
 }
 
 .insight-message {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-bottom: var(--spacing-md);
 }
 
 .insight-score {
@@ -99,6 +103,7 @@
   background: var(--gray-200);
   border-radius: var(--radius-full);
   overflow: hidden;
+  margin-top: var(--spacing-md);
 }
 
 .insight-score-bar {
@@ -106,27 +111,41 @@
   background: linear-gradient(90deg, #6366f1, #8b5cf6);
   border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: shimmer 2s infinite;
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes shimmer {
-  0% { background-position: -100% 0; }
-  100% { background-position: 200% 0; }
+.insight-score-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmerSlide 2s infinite;
+}
+
+@keyframes shimmerSlide {
+  0% { 
+    transform: translateX(-100%); 
+  }
+  100% { 
+    transform: translateX(200%); 
+  }
 }
 
 /* ===================================
-   CHARTS SECTION
+   TREND VISUALIZATION
    =================================== */
-.charts-section {
-  margin-bottom: var(--spacing-2xl);
-}
-
 .chart-card {
   background: var(--bg-primary);
   border-radius: var(--radius-xl);
   padding: var(--spacing-xl);
   border: 1px solid var(--border-color);
   margin-bottom: var(--spacing-lg);
+  transition: all var(--transition-base);
+}
+
+.chart-card:hover {
+  box-shadow: var(--shadow-lg);
 }
 
 .chart-header {
@@ -139,6 +158,7 @@
 .chart-title {
   font-size: var(--font-size-lg);
   font-weight: 700;
+  color: var(--text-primary);
 }
 
 .chart-subtitle {
@@ -147,9 +167,31 @@
   margin-top: var(--spacing-xs);
 }
 
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+canvas {
+  max-width: 100%;
+  display: block;
+  height: auto !important;
+}
+
+/* Chart Legend */
 .chart-legend {
   display: flex;
   gap: var(--spacing-lg);
+  justify-content: center;
+  margin-top: var(--spacing-lg);
+  flex-wrap: wrap;
 }
 
 .legend-item {
@@ -160,36 +202,19 @@
   color: var(--text-secondary);
 }
 
-.legend-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.chart-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: var(--spacing-lg);
-}
-
-canvas {
-  max-width: 100%;
-  height: auto;
-  display: block;
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-sm);
 }
 
 /* ===================================
-   PREDICTIONS SECTION
+   FORECASTS AND SIGNAL CONFIDENCE
    =================================== */
-.predictions-section {
-  margin-bottom: var(--spacing-2xl);
-}
-
 .predictions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--spacing-md);
-  margin-top: var(--spacing-lg);
 }
 
 .prediction-card {
@@ -200,15 +225,12 @@ canvas {
   text-align: center;
   transition: all var(--transition-base);
   position: relative;
-  overflow: hidden;
 }
 
 .prediction-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0 0 auto 0;
   height: 3px;
   background: linear-gradient(90deg, #6366f1, #8b5cf6);
 }
@@ -232,13 +254,13 @@ canvas {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
 }
 
-.prediction-value span {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  opacity: 0.7;
+.prediction-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
 }
 
 .prediction-confidence {
@@ -250,33 +272,99 @@ canvas {
   background: var(--gray-200);
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: var(--spacing-xs);
 }
 
 .confidence-fill {
   height: 100%;
   background: linear-gradient(90deg, #10b981, #14b8a6);
   border-radius: var(--radius-full);
-  transition: width 1s ease;
+  transition: width var(--transition-slow);
 }
 
-.prediction-confidence span {
+.confidence-label {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
 }
 
 /* ===================================
-   ACHIEVEMENTS SECTION
+   RISK INDICATORS
    =================================== */
-.achievements-section {
-  margin-bottom: var(--spacing-2xl);
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.risk-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  border: 2px solid var(--border-color);
+  transition: all var(--transition-base);
+}
+
+.risk-card.risk-high {
+  border-color: var(--error-500);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.risk-card.risk-medium {
+  border-color: var(--warning-500);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.risk-card.risk-low {
+  border-color: var(--success-500);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.risk-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.risk-level {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.risk-level.high {
+  background: var(--error-100);
+  color: var(--error-600);
+}
+
+.risk-level.medium {
+  background: var(--warning-100);
+  color: var(--warning-600);
+}
+
+.risk-level.low {
+  background: var(--success-100);
+  color: var(--success-600);
+}
+
+/* ===================================
+   MILESTONES AND PROGRESS
+   =================================== */
+.milestones-section {
+  margin-top: var(--spacing-2xl);
 }
 
 .achievements-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
 }
 
 .achievement-card {
@@ -296,8 +384,11 @@ canvas {
 
 .achievement-card.unlocked {
   border-color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(20, 184, 166, 0.05));
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.05),
+    rgba(20, 184, 166, 0.05)
+  );
 }
 
 .achievement-card:hover {
@@ -305,42 +396,30 @@ canvas {
   box-shadow: var(--shadow-xl);
 }
 
-.achievement-card.unlocked:hover {
-  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
-}
-
 .achievement-icon {
   font-size: 3rem;
   margin-bottom: var(--spacing-md);
-  display: inline-block;
   animation: bounceAnimation 2s ease-in-out infinite;
 }
 
 @keyframes bounceAnimation {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { 
+    transform: translateY(0); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
 }
 
-.achievement-card.unlocked .achievement-icon {
-  animation: celebrateAnimation 0.6s ease-in-out;
-}
-
-@keyframes celebrateAnimation {
-  0% { transform: scale(1) rotate(0deg); }
-  25% { transform: scale(1.2) rotate(-10deg); }
-  50% { transform: scale(1.1) rotate(10deg); }
-  75% { transform: scale(1.2) rotate(-5deg); }
-  100% { transform: scale(1) rotate(0deg); }
-}
-
-.achievement-card h4 {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
+.achievement-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
   margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
 }
 
-.achievement-card p {
-  font-size: var(--font-size-sm);
+.achievement-description {
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
   margin-bottom: var(--spacing-md);
 }
@@ -350,92 +429,169 @@ canvas {
   background: var(--gray-200);
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: var(--spacing-sm);
+  margin-top: var(--spacing-md);
 }
 
 .achievement-progress-bar {
   height: 100%;
   background: linear-gradient(90deg, #6366f1, #8b5cf6);
   border-radius: var(--radius-full);
-  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width var(--transition-slow);
 }
 
-.achievement-status {
+/* ===================================
+   SIGNAL HEATMAP
+   =================================== */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-lg);
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-sm);
+}
+
+.heatmap-cell[data-intensity="0"] {
+  background: var(--gray-100);
+}
+
+.heatmap-cell[data-intensity="1"] {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.heatmap-cell[data-intensity="2"] {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+.heatmap-cell[data-intensity="3"] {
+  background: rgba(99, 102, 241, 0.6);
+}
+
+.heatmap-cell[data-intensity="4"] {
+  background: rgba(99, 102, 241, 0.8);
+}
+
+.heatmap-cell[data-intensity="5"] {
+  background: rgba(99, 102, 241, 1);
+}
+
+/* ===================================
+   METRIC CARDS
+   =================================== */
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.metric-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-base);
+}
+
+.metric-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.metric-label {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.metric-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.metric-change {
+  font-size: var(--font-size-sm);
   font-weight: 600;
-}
-
-.achievement-badge {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #10b981, #14b8a6);
-  border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  margin: var(--spacing-md) auto 0;
-  color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
-  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
-  animation: pulseAnimation 2s ease-in-out infinite;
+  gap: var(--spacing-xs);
 }
 
-@keyframes pulseAnimation {
-  0%, 100% { transform: scale(1); box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3); }
-  50% { transform: scale(1.05); box-shadow: 0 12px 24px rgba(16, 185, 129, 0.4); }
+.metric-change.positive {
+  color: var(--success-600);
+}
+
+.metric-change.negative {
+  color: var(--error-600);
+}
+
+.metric-change.neutral {
+  color: var(--text-secondary);
 }
 
 /* ===================================
-   ENHANCED ANIMATIONS
+   TIMELINE VISUALIZATION
    =================================== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.timeline-viz {
+  position: relative;
+  padding: var(--spacing-xl) 0;
 }
 
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.timeline-line {
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-color);
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.timeline-event {
+  position: relative;
+  padding-left: calc(var(--spacing-xl) + 24px);
+  margin-bottom: var(--spacing-xl);
 }
 
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.timeline-event::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 0 0 2px var(--primary-500);
+}
+
+.timeline-event.critical::before {
+  background: var(--error-500);
+  box-shadow: 0 0 0 2px var(--error-500);
+}
+
+.timeline-event.success::before {
+  background: var(--success-500);
+  box-shadow: 0 0 0 2px var(--success-500);
 }
 
 /* ===================================
-   GLASSMORPHISM EFFECTS
+   GLASS MORPHISM EFFECTS
    =================================== */
 .glass-effect {
   background: rgba(255, 255, 255, 0.7);
@@ -445,141 +601,226 @@ canvas {
 }
 
 body.dark-theme .glass-effect {
-  background: rgba(31, 41, 55, 0.7);
-  border: 1px solid rgba(75, 85, 99, 0.3);
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ===================================
-   LOADING SKELETON
+   SKELETON LOADING STATES
    =================================== */
 .skeleton {
-  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--gray-200) 25%,
+    var(--gray-100) 50%,
+    var(--gray-200) 75%
+  );
   background-size: 200% 100%;
-  animation: skeletonLoading 1.5s ease-in-out infinite;
+  animation: skeletonLoading 1.5s infinite;
   border-radius: var(--radius-md);
 }
 
 @keyframes skeletonLoading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% { 
+    background-position: 200% 0; 
+  }
+  100% { 
+    background-position: -200% 0; 
+  }
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-title {
+  height: 1.5rem;
+  width: 60%;
+  margin-bottom: var(--spacing-md);
+}
+
+.skeleton-card {
+  height: 200px;
 }
 
 /* ===================================
-   HOVER GLOW EFFECT
+   PULSE ANIMATIONS
    =================================== */
-.glow-on-hover {
-  position: relative;
-  overflow: hidden;
+.pulse {
+  animation: pulseAnimation 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.glow-on-hover::after {
+@keyframes pulseAnimation {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-ring {
+  animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+/* ===================================
+   GRADIENT ANIMATIONS
+   =================================== */
+.gradient-animate {
+  background: linear-gradient(
+    270deg,
+    var(--primary-500),
+    var(--secondary-500),
+    var(--primary-600)
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ===================================
+   DATA VISUALIZATION TOOLTIPS
+   =================================== */
+.chart-tooltip {
+  position: absolute;
+  background: var(--gray-900);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+body.dark-theme .chart-tooltip {
+  background: white;
+  color: var(--gray-900);
+}
+
+.chart-tooltip.visible {
+  opacity: 1;
+}
+
+.chart-tooltip::after {
   content: '';
   position: absolute;
-  top: 50%;
+  top: 100%;
   left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-  pointer-events: none;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--gray-900);
 }
 
-.glow-on-hover:hover::after {
-  width: 300px;
-  height: 300px;
+body.dark-theme .chart-tooltip::after {
+  border-top-color: white;
+}
+
+/* ===================================
+   ACCESSIBILITY & REDUCED MOTION
+   =================================== */
+@media (prefers-reduced-motion: reduce) {
+  .insight-icon,
+  .achievement-icon,
+  .insight-score-bar::after,
+  .skeleton,
+  .pulse,
+  .pulse-ring,
+  .gradient-animate {
+    animation: none !important;
+  }
+  
+  .insight-card:hover,
+  .prediction-card:hover,
+  .achievement-card:hover {
+    transform: none !important;
+  }
 }
 
 /* ===================================
    RESPONSIVE ADJUSTMENTS
    =================================== */
-@media (max-width: 1024px) {
-  .chart-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .insights-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 768px) {
-  .predictions-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-  
-  .achievements-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-  }
-  
   .insight-card {
     flex-direction: column;
     text-align: center;
   }
   
   .insight-icon {
-    font-size: 3rem;
+    font-size: 2rem;
+  }
+  
+  .predictions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .achievements-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .heatmap-grid {
+    gap: 2px;
   }
 }
 
 @media (max-width: 480px) {
   .predictions-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   
   .chart-card {
     padding: var(--spacing-md);
   }
-  
-  canvas {
-    height: 200px !important;
-  }
 }
 
 /* ===================================
-   PRINT STYLES FOR ANALYTICS
+   PRINT OPTIMIZATION
    =================================== */
 @media print {
-  .chart-card {
-    page-break-inside: avoid;
-    margin-bottom: var(--spacing-xl);
-  }
-  
   .insight-card,
-  .achievement-card {
-    page-break-inside: avoid;
-  }
-  
-  canvas {
-    max-width: 100%;
-  }
-}
-
-/* ===================================
-   ACCESSIBILITY ENHANCEMENTS
-   =================================== */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .insight-card,
+  .prediction-card,
   .achievement-card,
-  .prediction-card {
-    border-width: 3px;
+  .metric-card {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  
+  .skeleton,
+  .pulse,
+  .pulse-ring {
+    animation: none;
   }
 }

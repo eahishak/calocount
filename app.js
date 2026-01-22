@@ -1,32 +1,45 @@
 // ===================================
+// SIGNALBOARD - CORE APPLICATION
+// Customer feedback signal tracking for product teams
+// Author: Emmanuel Ahishakiye
+// ===================================
+
+// ===================================
 // STATE MANAGEMENT
 // ===================================
 const state = {
   currentView: 'dashboard',
-  meals: [],
-  plans: [
+  
+  // Customer feedback signals
+  signals: [],
+  
+  // Baseline metrics for comparison
+  benchmarks: [
     {
       id: 'default',
-      name: 'Balanced Diet',
-      calories: 2000,
-      protein: 150,
-      carbs: 200,
-      fats: 65,
+      name: 'Q1 Baseline',
+      targetImpact: 1000,
+      urgencyThreshold: 3,
+      customerTierWeight: { enterprise: 3, pro: 2, free: 1 },
       active: true
     }
   ],
-  currentPlan: null,
+  
+  currentBenchmark: null,
+  
+  // PM user profile
   user: {
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    age: null,
-    weight: null,
-    goal: 'maintain'
+    name: 'Emmanuel Ahishakiye',
+    email: 'emmanuel@cloudflare.com',
+    productArea: 'Developer Platform',
+    team: 'Product Management',
+    focus: 'reliability'
   },
+  
   theme: 'light',
-  cameraStream: null,
-  currentFacingMode: 'environment', // 'user' for front camera, 'environment' for back
-  currentImage: null
+  captureStream: null,
+  currentFacingMode: 'environment',
+  currentCapture: null
 };
 
 // ===================================
@@ -37,34 +50,38 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeApp() {
-  // Load saved data
+  console.log('Initializing SignalBoard...');
+  
+  // Load persisted data
   loadFromLocalStorage();
   
-  // Set up event listeners
+  // Setup event listeners
   setupNavigation();
   setupThemeToggle();
-  setupCameraControls();
-  setupMealForm();
-  setupPlanForm();
+  setupCaptureControls();
+  setupSignalForm();
+  setupBenchmarkForm();
   setupProfileForm();
-  setupHistoryFilter();
+  setupTimelineFilter();
+  
+  // Initialize current benchmark
+  if (state.benchmarks.length > 0 && !state.currentBenchmark) {
+    state.currentBenchmark = state.benchmarks.find(b => b.active) || state.benchmarks[0];
+  }
   
   // Initial render
   updateDashboard();
-  renderRecentMeals();
-  renderHistory();
-  renderPlans();
+  renderRecentSignals();
+  renderTimeline();
+  renderBenchmarks();
   
-  // Set active plan
-  if (state.plans.length > 0 && !state.currentPlan) {
-    state.currentPlan = state.plans.find(p => p.active) || state.plans[0];
-  }
-  
-  console.log('CaloCount Pro initialized successfully!');
+  console.log('✓ SignalBoard initialized successfully');
+  console.log(`→ Signals: ${state.signals.length}`);
+  console.log(`→ Benchmarks: ${state.benchmarks.length}`);
 }
 
 // ===================================
-// NAVIGATION
+// NAVIGATION SYSTEM
 // ===================================
 function setupNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
@@ -87,17 +104,19 @@ function switchView(viewName) {
     view.classList.remove('active');
   });
   
-  // Show selected view
+  // Show target view
   const targetView = document.getElementById(`${viewName}-view`);
   if (targetView) {
     targetView.classList.add('active');
     state.currentView = viewName;
     
-    // Stop camera if leaving camera view
-    if (viewName !== 'camera' && state.cameraStream) {
-      stopCamera();
+    // Cleanup on view change
+    if (viewName !== 'capture' && state.captureStream) {
+      stopCapture();
     }
   }
+  
+  console.log(`→ Switched to view: ${viewName}`);
 }
 
 // ===================================
@@ -105,6 +124,7 @@ function switchView(viewName) {
 // ===================================
 function setupThemeToggle() {
   const themeSwitch = document.getElementById('theme-switch');
+  if (!themeSwitch) return;
   
   // Set initial theme
   if (state.theme === 'dark') {
@@ -125,281 +145,253 @@ function setupThemeToggle() {
 }
 
 // ===================================
-// CAMERA FUNCTIONALITY
+// CAPTURE CONTROLS
 // ===================================
-function setupCameraControls() {
+function setupCaptureControls() {
   const uploadBtn = document.getElementById('upload-btn');
   const fileInput = document.getElementById('file-input');
-  const cameraBtn = document.getElementById('camera-btn');
-  const captureBtn = document.getElementById('capture-btn');
-  const switchCameraBtn = document.getElementById('switch-camera-btn');
-  const closeCameraBtn = document.getElementById('close-camera-btn');
-  const retakeBtn = document.getElementById('retake-btn');
+  const pasteBtn = document.getElementById('paste-btn');
+  const githubBtn = document.getElementById('github-btn');
   const analyzeBtn = document.getElementById('analyze-btn');
   
-  // Upload photo
+  if (!uploadBtn || !fileInput) return;
+  
+  // File upload
   uploadBtn.addEventListener('click', () => {
     fileInput.click();
   });
   
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        showPreview(event.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-  
-  // Open camera
-  cameraBtn.addEventListener('click', async () => {
-    await startCamera();
-  });
-  
-  // Capture photo
-  captureBtn.addEventListener('click', () => {
-    capturePhoto();
-  });
-  
-  // Switch camera (front/back)
-  switchCameraBtn.addEventListener('click', async () => {
-    state.currentFacingMode = state.currentFacingMode === 'user' ? 'environment' : 'user';
-    await startCamera();
-  });
-  
-  // Close camera
-  closeCameraBtn.addEventListener('click', () => {
-    stopCamera();
-  });
-  
-  // Retake photo
-  retakeBtn.addEventListener('click', () => {
-    hidePreview();
-    startCamera();
-  });
-  
-  // Analyze photo
-  analyzeBtn.addEventListener('click', async () => {
-    await analyzeMeal();
-  });
-}
-
-async function startCamera() {
-  try {
-    // Stop existing stream
-    if (state.cameraStream) {
-      stopCamera();
+    if (!file) return;
+    
+    // Validate file type (CSV or text)
+    if (!file.name.match(/\.(csv|txt)$/i)) {
+      showToast('Please upload a CSV or TXT file');
+      return;
     }
     
-    const constraints = {
-      video: {
-        facingMode: state.currentFacingMode,
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      },
-      audio: false
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      handleFileUpload(event.target.result, file.name);
     };
-    
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    state.cameraStream = stream;
-    
-    const videoStream = document.getElementById('video-stream');
-    videoStream.srcObject = stream;
-    
-    // Show video container
-    document.getElementById('video-container').classList.remove('hidden');
-    document.getElementById('preview-container').classList.add('hidden');
-    
-  } catch (error) {
-    console.error('Camera error:', error);
-    showToast('Camera access denied or unavailable. Please use the upload option.');
+    reader.readAsText(file);
+  });
+  
+  // Paste feedback
+  pasteBtn?.addEventListener('click', () => {
+    showSignalForm();
+    showToast('Manual entry mode activated');
+  });
+  
+  // GitHub import (mock)
+  githubBtn?.addEventListener('click', () => {
+    showToast('GitHub integration coming soon');
+  });
+  
+  // Analyze button
+  analyzeBtn?.addEventListener('click', async () => {
+    await analyzeSignal();
+  });
+}
+
+function handleFileUpload(content, filename) {
+  console.log(`Processing file: ${filename}`);
+  showLoading('Parsing feedback data...');
+  
+  setTimeout(() => {
+    hideLoading();
+    showSignalForm();
+    showToast(`Loaded ${filename} successfully`);
+  }, 1000);
+}
+
+function showSignalForm() {
+  const container = document.getElementById('signal-form-container');
+  if (container) {
+    container.classList.remove('hidden');
+    container.scrollIntoView({ behavior: 'smooth' });
   }
 }
 
-function stopCamera() {
-  if (state.cameraStream) {
-    state.cameraStream.getTracks().forEach(track => track.stop());
-    state.cameraStream = null;
+function hideSignalForm() {
+  const container = document.getElementById('signal-form-container');
+  if (container) {
+    container.classList.add('hidden');
   }
-  document.getElementById('video-container').classList.add('hidden');
 }
 
-function capturePhoto() {
-  const video = document.getElementById('video-stream');
-  const canvas = document.getElementById('canvas');
-  const context = canvas.getContext('2d');
-  
-  // Set canvas size to video size
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  
-  // Draw video frame to canvas
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
-  // Get image data
-  const imageData = canvas.toDataURL('image/jpeg', 0.9);
-  
-  // Stop camera and show preview
-  stopCamera();
-  showPreview(imageData);
-}
-
-function showPreview(imageData) {
-  state.currentImage = imageData;
-  const previewImage = document.getElementById('preview-image');
-  previewImage.src = imageData;
-  
-  document.getElementById('preview-container').classList.remove('hidden');
-  document.getElementById('video-container').classList.add('hidden');
-}
-
-function hidePreview() {
-  document.getElementById('preview-container').classList.add('hidden');
-  state.currentImage = null;
+function stopCapture() {
+  if (state.captureStream) {
+    state.captureStream.getTracks().forEach(track => track.stop());
+    state.captureStream = null;
+  }
 }
 
 // ===================================
-// AI MEAL ANALYSIS (SIMULATED)
+// SIGNAL ANALYSIS (AI Simulation)
 // ===================================
-async function analyzeMeal() {
-  if (!state.currentImage) {
-    showToast('Please capture or upload a photo first');
+async function analyzeSignal() {
+  if (!state.currentCapture) {
+    showToast('No input to analyze');
     return;
   }
   
-  showLoading('Analyzing your meal with AI...');
+  showLoading('Analyzing signal with AI...');
   
-  try {
-    // Simulate AI analysis delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Simulated AI response
-    const analysis = simulateAIAnalysis();
-    
-    hideLoading();
-    
-    // Populate form with results
-    document.getElementById('meal-name').value = analysis.name;
-    document.getElementById('meal-calories').value = analysis.calories;
-    document.getElementById('meal-protein').value = analysis.protein;
-    document.getElementById('meal-carbs').value = analysis.carbs;
-    document.getElementById('meal-fats').value = analysis.fats;
-    
-    // Show results section
-    document.getElementById('analysis-results').classList.remove('hidden');
-    
-    showToast('Meal analyzed successfully!');
-    
-  } catch (error) {
-    hideLoading();
-    showToast('Analysis failed. Please try again.');
-    console.error('Analysis error:', error);
-  }
+  // Simulate AI processing delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Simulate AI analysis result
+  const analysis = simulateAIAnalysis();
+  
+  hideLoading();
+  
+  // Populate form with AI results
+  document.getElementById('signal-title').value = analysis.title;
+  document.getElementById('signal-impact').value = analysis.impact;
+  document.getElementById('signal-urgency').value = analysis.urgency;
+  document.getElementById('signal-source').value = analysis.source;
+  document.getElementById('signal-category').value = analysis.category;
+  document.getElementById('signal-tier').value = analysis.tier;
+  document.getElementById('signal-context').value = analysis.context;
+  
+  showToast('AI analysis complete');
 }
 
 function simulateAIAnalysis() {
-  // Simulated meal database
-  const meals = [
-    { name: 'Grilled Chicken Salad', calories: 350, protein: 35, carbs: 20, fats: 15 },
-    { name: 'Salmon with Rice', calories: 520, protein: 40, carbs: 55, fats: 18 },
-    { name: 'Vegetable Stir Fry', calories: 280, protein: 12, carbs: 40, fats: 8 },
-    { name: 'Turkey Sandwich', calories: 420, protein: 30, carbs: 45, fats: 12 },
-    { name: 'Greek Yogurt Bowl', calories: 250, protein: 20, carbs: 30, fats: 6 },
-    { name: 'Pasta with Meatballs', calories: 650, protein: 35, carbs: 75, fats: 22 },
-    { name: 'Chicken Burrito Bowl', calories: 580, protein: 42, carbs: 60, fats: 18 },
-    { name: 'Protein Smoothie', calories: 320, protein: 28, carbs: 35, fats: 8 },
-    { name: 'Egg White Omelette', calories: 220, protein: 25, carbs: 8, fats: 10 },
-    { name: 'Quinoa Buddha Bowl', calories: 450, protein: 18, carbs: 55, fats: 16 }
+  const samples = [
+    {
+      title: 'Workers timeout under high load in EU region',
+      impact: 85,
+      urgency: 4,
+      source: 'support',
+      category: 'bug',
+      tier: 'enterprise',
+      context: 'Multiple enterprise customers in EU reporting 504 errors during peak traffic. Affects Workers deployments with >1000 req/s.'
+    },
+    {
+      title: 'TypeScript bindings request for Workers KV',
+      impact: 72,
+      urgency: 2,
+      source: 'github',
+      category: 'feature',
+      tier: 'pro',
+      context: '12 developers requesting native TypeScript support for KV bindings. Current workaround requires manual type generation.'
+    },
+    {
+      title: 'R2 pricing feedback - highly positive',
+      impact: 65,
+      urgency: 1,
+      source: 'community',
+      category: 'feedback',
+      tier: 'enterprise',
+      context: 'Storage-heavy users praising new pricing model. Migration tools cited as key differentiator.'
+    },
+    {
+      title: 'Pages deployment speed regression',
+      impact: 78,
+      urgency: 3,
+      source: 'internal',
+      category: 'performance',
+      tier: 'pro',
+      context: 'Build times increased 40% after recent infra change. Affecting CI/CD pipelines for large projects.'
+    },
+    {
+      title: 'KV consistency model documentation gap',
+      impact: 55,
+      urgency: 2,
+      source: 'support',
+      category: 'documentation',
+      tier: 'free',
+      context: 'Support tickets show confusion around eventual consistency. Need better examples and edge case documentation.'
+    }
   ];
   
-  // Return random meal for simulation
-  return meals[Math.floor(Math.random() * meals.length)];
+  return samples[Math.floor(Math.random() * samples.length)];
 }
 
 // ===================================
-// MEAL FORM HANDLING
+// SIGNAL FORM HANDLING
 // ===================================
-function setupMealForm() {
-  const saveMealBtn = document.getElementById('save-meal-btn');
-  const portionBtns = document.querySelectorAll('.portion-btn');
+function setupSignalForm() {
+  const saveBtn = document.getElementById('save-signal-btn');
+  const form = document.getElementById('signal-form');
   
-  // Portion size selection
-  portionBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      portionBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveSignal();
     });
-  });
+  }
   
-  // Save meal
-  saveMealBtn.addEventListener('click', () => {
-    saveMeal();
-  });
+  if (saveBtn) {
+    saveBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      saveSignal();
+    });
+  }
 }
 
-function saveMeal() {
-  const name = document.getElementById('meal-name').value.trim();
-  const calories = parseFloat(document.getElementById('meal-calories').value) || 0;
-  const protein = parseFloat(document.getElementById('meal-protein').value) || 0;
-  const carbs = parseFloat(document.getElementById('meal-carbs').value) || 0;
-  const fats = parseFloat(document.getElementById('meal-fats').value) || 0;
-  const notes = document.getElementById('meal-notes').value.trim();
+function saveSignal() {
+  const title = document.getElementById('signal-title')?.value.trim();
+  const impact = parseFloat(document.getElementById('signal-impact')?.value) || 0;
+  const urgency = parseInt(document.getElementById('signal-urgency')?.value) || 1;
+  const source = document.getElementById('signal-source')?.value || 'internal';
+  const category = document.getElementById('signal-category')?.value || 'feedback';
+  const tier = document.getElementById('signal-tier')?.value || 'free';
+  const context = document.getElementById('signal-context')?.value.trim() || '';
   
-  // Get active portion multiplier
-  const activePortion = document.querySelector('.portion-btn.active');
-  const portionMultiplier = parseFloat(activePortion.dataset.portion) || 1;
-  
-  if (!name || calories <= 0) {
-    showToast('Please provide meal name and calories');
+  // Validation
+  if (!title || impact <= 0) {
+    showToast('Title and impact score required');
     return;
   }
   
-  const meal = {
+  if (impact > 100) {
+    showToast('Impact score must be between 0-100');
+    return;
+  }
+  
+  // Create signal object
+  const signal = {
     id: Date.now(),
-    name,
-    calories: calories * portionMultiplier,
-    protein: protein * portionMultiplier,
-    carbs: carbs * portionMultiplier,
-    fats: fats * portionMultiplier,
-    notes,
-    portion: portionMultiplier,
-    image: state.currentImage,
+    title,
+    impact,
+    urgency,
+    source,
+    category,
+    tier,
+    context,
     timestamp: new Date().toISOString(),
     date: new Date().toLocaleDateString()
   };
   
-  state.meals.unshift(meal);
+  // Add to state
+  state.signals.unshift(signal);
   saveToLocalStorage();
   
-  // Reset form and switch to dashboard
-  resetMealForm();
+  // Reset form
+  resetSignalForm();
+  
+  // Update UI
   updateDashboard();
-  renderRecentMeals();
-  renderHistory();
+  renderRecentSignals();
+  renderTimeline();
+  
+  // Navigate back
   switchView('dashboard');
   
-  showToast('Meal saved successfully!');
+  showToast('Signal saved successfully');
+  console.log('→ Signal saved:', signal.title);
 }
 
-function resetMealForm() {
-  document.getElementById('meal-name').value = '';
-  document.getElementById('meal-calories').value = '';
-  document.getElementById('meal-protein').value = '';
-  document.getElementById('meal-carbs').value = '';
-  document.getElementById('meal-fats').value = '';
-  document.getElementById('meal-notes').value = '';
-  document.getElementById('analysis-results').classList.add('hidden');
-  hidePreview();
+function resetSignalForm() {
+  const form = document.getElementById('signal-form');
+  if (form) form.reset();
   
-  // Reset portion to regular
-  document.querySelectorAll('.portion-btn').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.dataset.portion === '1') {
-      btn.classList.add('active');
-    }
-  });
+  hideSignalForm();
+  state.currentCapture = null;
 }
 
 // ===================================
@@ -407,181 +399,178 @@ function resetMealForm() {
 // ===================================
 function updateDashboard() {
   const today = new Date().toLocaleDateString();
-  const todayMeals = state.meals.filter(meal => meal.date === today);
+  const todaySignals = state.signals.filter(signal => signal.date === today);
   
-  // Calculate totals
-  const totals = todayMeals.reduce((acc, meal) => ({
-    calories: acc.calories + meal.calories,
-    protein: acc.protein + meal.protein,
-    carbs: acc.carbs + meal.carbs,
-    fats: acc.fats + meal.fats
-  }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
+  // Calculate daily impact
+  const dailyImpact = todaySignals.reduce((sum, signal) => {
+    // Weight by tier
+    const tierWeight = state.currentBenchmark?.customerTierWeight?.[signal.tier] || 1;
+    return sum + (signal.impact * tierWeight);
+  }, 0);
   
-  // Get current plan targets
-  const plan = state.currentPlan || state.plans[0];
+  // Calculate benchmark progress
+  const benchmark = state.currentBenchmark;
+  if (!benchmark) return;
   
-  // Update stat cards
-  updateStatCard('calories', totals.calories, plan.calories);
-  updateStatCard('protein', totals.protein, plan.protein);
-  updateStatCard('carbs', totals.carbs, plan.carbs);
-  updateStatCard('fats', totals.fats, plan.fats);
+  updateStatCard('daily-impact', dailyImpact, benchmark.targetImpact);
+  
+  // Update critical signals count
+  const criticalCount = todaySignals.filter(s => s.urgency >= 3).length;
+  updateStatCard('critical-signals', criticalCount, 10);
+  
+  // Update signal velocity (signals per week)
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekSignals = state.signals.filter(s => new Date(s.timestamp) >= weekAgo);
+  updateStatCard('signal-velocity', weekSignals.length, 50);
 }
 
-function updateStatCard(nutrient, consumed, target) {
-  const consumedEl = document.getElementById(`${nutrient}-consumed`);
-  const targetEl = document.getElementById(`${nutrient}-target`);
-  const progressEl = document.getElementById(`${nutrient}-progress`);
-  const remainingEl = document.getElementById(`${nutrient}-remaining`);
+function updateStatCard(id, value, target) {
+  const valueEl = document.getElementById(id);
+  const progressEl = document.getElementById(`${id}-progress`);
   
-  if (consumedEl) consumedEl.textContent = Math.round(consumed);
-  if (targetEl) targetEl.textContent = Math.round(target);
+  if (valueEl) {
+    valueEl.textContent = Math.round(value);
+  }
   
-  const percentage = Math.min((consumed / target) * 100, 100);
-  if (progressEl) progressEl.style.width = `${percentage}%`;
-  
-  const remaining = target - consumed;
-  if (remainingEl) {
-    if (remaining > 0) {
-      remainingEl.textContent = `${Math.round(remaining)}${nutrient === 'calories' ? ' kcal' : 'g'} remaining`;
-    } else {
-      remainingEl.textContent = `${Math.round(Math.abs(remaining))}${nutrient === 'calories' ? ' kcal' : 'g'} over target`;
-    }
+  if (progressEl && target > 0) {
+    const percentage = Math.min((value / target) * 100, 100);
+    progressEl.style.width = `${percentage}%`;
   }
 }
 
-function renderRecentMeals() {
-  const container = document.getElementById('recent-meals');
-  const today = new Date().toLocaleDateString();
-  const todayMeals = state.meals.filter(meal => meal.date === today);
+// ===================================
+// RECENT SIGNALS RENDERING
+// ===================================
+function renderRecentSignals() {
+  const container = document.getElementById('recent-signals');
+  if (!container) return;
   
-  if (todayMeals.length === 0) {
+  const today = new Date().toLocaleDateString();
+  const todaySignals = state.signals.filter(signal => signal.date === today);
+  
+  if (todaySignals.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3">
-          <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
         </svg>
-        <p>No meals tracked yet today</p>
-        <button class="btn-primary" onclick="switchView('camera')" style="margin-top: 1rem;">Scan Your First Meal</button>
+        <p>No signals captured yet today</p>
+        <button class="btn-primary" onclick="switchView('capture')">Capture First Signal</button>
       </div>
     `;
     return;
   }
   
-  container.innerHTML = todayMeals.slice(0, 6).map(meal => `
-    <div class="meal-card">
-      <div class="meal-header">
+  container.innerHTML = todaySignals.slice(0, 6).map(signal => `
+    <div class="signal-card">
+      <div class="signal-header">
         <div>
-          <h4 class="meal-name">${meal.name}</h4>
-          <p class="meal-time">${new Date(meal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          <h4 class="signal-title">${signal.title}</h4>
+          <p class="signal-source">
+            ${formatSource(signal.source)} • ${formatCategory(signal.category)} • ${signal.tier.toUpperCase()}
+          </p>
         </div>
-        <button class="btn-icon" onclick="deleteMeal(${meal.id})">
+        <button class="btn-icon" onclick="deleteSignal(${signal.id})" aria-label="Delete signal">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" />
           </svg>
         </button>
       </div>
-      <div class="meal-macros">
-        <div class="meal-macro">
-          <span class="macro-label">Calories</span>
-          <span class="macro-value">${Math.round(meal.calories)}</span>
+      <div class="signal-meta">
+        <div class="signal-metric">
+          <span class="metric-label">Impact</span>
+          <span class="metric-value">${Math.round(signal.impact)}</span>
         </div>
-        <div class="meal-macro">
-          <span class="macro-label">Protein</span>
-          <span class="macro-value">${Math.round(meal.protein)}g</span>
+        <div class="signal-metric">
+          <span class="metric-label">Urgency</span>
+          <span class="metric-value">${formatUrgency(signal.urgency)}</span>
         </div>
-        <div class="meal-macro">
-          <span class="macro-label">Carbs</span>
-          <span class="macro-value">${Math.round(meal.carbs)}g</span>
-        </div>
-        <div class="meal-macro">
-          <span class="macro-label">Fats</span>
-          <span class="macro-value">${Math.round(meal.fats)}g</span>
+        <div class="signal-metric">
+          <span class="metric-label">Time</span>
+          <span class="metric-value">${new Date(signal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
       </div>
     </div>
   `).join('');
 }
 
-function deleteMeal(mealId) {
-  if (confirm('Delete this meal?')) {
-    state.meals = state.meals.filter(meal => meal.id !== mealId);
-    saveToLocalStorage();
-    updateDashboard();
-    renderRecentMeals();
-    renderHistory();
-    showToast('Meal deleted');
-  }
-}
-
-function clearTodayMeals() {
-  if (confirm('Clear all meals from today?')) {
-    const today = new Date().toLocaleDateString();
-    state.meals = state.meals.filter(meal => meal.date !== today);
-    saveToLocalStorage();
-    updateDashboard();
-    renderRecentMeals();
-    renderHistory();
-    showToast('Today\'s meals cleared');
-  }
-}
-
 // ===================================
-// HISTORY
+// TIMELINE RENDERING
 // ===================================
-function setupHistoryFilter() {
+function setupTimelineFilter() {
   const filterSelect = document.getElementById('history-filter');
-  filterSelect.addEventListener('change', () => {
-    renderHistory();
-  });
+  if (filterSelect) {
+    filterSelect.addEventListener('change', () => {
+      renderTimeline();
+    });
+  }
+  
+  const sourceFilter = document.getElementById('source-filter');
+  if (sourceFilter) {
+    sourceFilter.addEventListener('change', () => {
+      renderTimeline();
+    });
+  }
 }
 
-function renderHistory() {
-  const container = document.getElementById('history-list');
-  const filter = document.getElementById('history-filter').value;
+function renderTimeline() {
+  const container = document.getElementById('timeline-list');
+  if (!container) return;
   
-  let filteredMeals = [...state.meals];
+  const filter = document.getElementById('history-filter')?.value || 'all';
+  const sourceFilter = document.getElementById('source-filter')?.value || 'all';
+  
+  let filteredSignals = [...state.signals];
   const now = new Date();
   
+  // Time filter
   if (filter === 'today') {
     const today = now.toLocaleDateString();
-    filteredMeals = filteredMeals.filter(meal => meal.date === today);
+    filteredSignals = filteredSignals.filter(signal => signal.date === today);
   } else if (filter === 'week') {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    filteredMeals = filteredMeals.filter(meal => new Date(meal.timestamp) >= weekAgo);
+    filteredSignals = filteredSignals.filter(signal => new Date(signal.timestamp) >= weekAgo);
   } else if (filter === 'month') {
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    filteredMeals = filteredMeals.filter(meal => new Date(meal.timestamp) >= monthAgo);
+    filteredSignals = filteredSignals.filter(signal => new Date(signal.timestamp) >= monthAgo);
   }
   
-  if (filteredMeals.length === 0) {
+  // Source filter
+  if (sourceFilter !== 'all') {
+    filteredSignals = filteredSignals.filter(signal => signal.source === sourceFilter);
+  }
+  
+  if (filteredSignals.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3">
           <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
         </svg>
-        <p>No meals found for this period</p>
+        <p>No signals found for this period</p>
       </div>
     `;
     return;
   }
   
-  container.innerHTML = filteredMeals.map(meal => `
-    <div class="history-item">
+  container.innerHTML = filteredSignals.map(signal => `
+    <div class="timeline-item">
       <div class="history-info">
-        <h4>${meal.name}</h4>
+        <h4>${signal.title}</h4>
         <p class="history-meta">
-          ${new Date(meal.timestamp).toLocaleDateString()} • 
-          ${new Date(meal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          ${new Date(signal.timestamp).toLocaleDateString()} • 
+          ${new Date(signal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • 
+          ${formatSource(signal.source)}
         </p>
       </div>
       <div class="history-stats">
         <div class="history-stat">
-          <span class="history-stat-value">${Math.round(meal.calories)}</span>
-          <span class="history-stat-label">kcal</span>
+          <span class="history-stat-value">${Math.round(signal.impact)}</span>
+          <span class="history-stat-label">impact</span>
         </div>
         <div class="history-stat">
-          <span class="history-stat-value">${Math.round(meal.protein)}g</span>
-          <span class="history-stat-label">protein</span>
+          <span class="history-stat-value">${formatUrgency(signal.urgency)}</span>
+          <span class="history-stat-label">urgency</span>
         </div>
       </div>
     </div>
@@ -589,70 +578,72 @@ function renderHistory() {
 }
 
 // ===================================
-// PLANS MANAGEMENT
+// BENCHMARKS
 // ===================================
-function setupPlanForm() {
-  const planForm = document.getElementById('plan-form');
-  planForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    createPlan();
-  });
+function setupBenchmarkForm() {
+  const form = document.getElementById('plan-form');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      createBenchmark();
+    });
+  }
 }
 
-function createPlan() {
-  const name = document.getElementById('plan-name').value.trim();
-  const calories = parseFloat(document.getElementById('plan-calories').value) || 0;
-  const protein = parseFloat(document.getElementById('plan-protein').value) || 0;
-  const carbs = parseFloat(document.getElementById('plan-carbs').value) || 0;
-  const fats = parseFloat(document.getElementById('plan-fats').value) || 0;
+function createBenchmark() {
+  const name = document.getElementById('plan-name')?.value.trim();
+  const targetImpact = parseFloat(document.getElementById('plan-calories')?.value) || 0;
+  const urgencyWeight = parseFloat(document.getElementById('plan-protein')?.value) || 1;
+  const tierWeight = parseFloat(document.getElementById('plan-carbs')?.value) || 1;
+  const categoryWeight = parseFloat(document.getElementById('plan-fats')?.value) || 1;
   
-  if (!name || calories <= 0) {
-    showToast('Please provide plan name and calorie target');
+  if (!name || targetImpact <= 0) {
+    showToast('Benchmark name and target impact required');
     return;
   }
   
-  const plan = {
+  const benchmark = {
     id: Date.now().toString(),
     name,
-    calories,
-    protein,
-    carbs,
-    fats,
+    targetImpact,
+    urgencyWeight,
+    tierWeight,
+    categoryWeight,
     active: false
   };
   
-  state.plans.push(plan);
+  state.benchmarks.push(benchmark);
   saveToLocalStorage();
-  renderPlans();
-  hideCreatePlan();
-  showToast('Plan created successfully!');
+  renderBenchmarks();
+  hideCreateBenchmark();
+  showToast('Benchmark created');
 }
 
-function renderPlans() {
-  const container = document.getElementById('plans-list');
+function renderBenchmarks() {
+  const container = document.getElementById('benchmarks-list');
+  if (!container) return;
   
-  if (state.plans.length === 0) {
+  if (state.benchmarks.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor" opacity="0.3">
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
         </svg>
-        <p>No nutrition plans yet</p>
-        <button class="btn-primary" onclick="showCreatePlan()" style="margin-top: 1rem;">Create Your First Plan</button>
+        <p>No benchmarks defined yet</p>
+        <button class="btn-primary" onclick="showCreateBenchmark()">Create First Benchmark</button>
       </div>
     `;
     return;
   }
   
-  container.innerHTML = state.plans.map(plan => `
-    <div class="plan-card ${plan.active ? 'active' : ''}" onclick="selectPlan('${plan.id}')">
+  container.innerHTML = state.benchmarks.map(benchmark => `
+    <div class="benchmark-card ${benchmark.active ? 'active' : ''}" onclick="selectBenchmark('${benchmark.id}')">
       <div class="plan-header">
         <div>
-          <h3 class="plan-name">${plan.name}</h3>
-          ${plan.active ? '<span class="plan-badge">Active</span>' : ''}
+          <h3 class="plan-name">${benchmark.name}</h3>
+          ${benchmark.active ? '<span class="plan-badge">Active</span>' : ''}
         </div>
-        <button class="btn-icon" onclick="deletePlan(event, '${plan.id}')">
+        <button class="btn-icon" onclick="deleteBenchmark(event, '${benchmark.id}')">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" />
           </svg>
@@ -660,87 +651,74 @@ function renderPlans() {
       </div>
       <div class="plan-goals">
         <div class="plan-goal">
-          <span class="plan-goal-label">Calories</span>
-          <span class="plan-goal-value">${Math.round(plan.calories)}</span>
-        </div>
-        <div class="plan-goal">
-          <span class="plan-goal-label">Protein</span>
-          <span class="plan-goal-value">${Math.round(plan.protein)}g</span>
-        </div>
-        <div class="plan-goal">
-          <span class="plan-goal-label">Carbs</span>
-          <span class="plan-goal-value">${Math.round(plan.carbs)}g</span>
-        </div>
-        <div class="plan-goal">
-          <span class="plan-goal-label">Fats</span>
-          <span class="plan-goal-value">${Math.round(plan.fats)}g</span>
+          <span class="plan-goal-label">Target Impact</span>
+          <span class="plan-goal-value">${Math.round(benchmark.targetImpact)}</span>
         </div>
       </div>
     </div>
   `).join('');
 }
 
-function selectPlan(planId) {
-  // Set all plans to inactive
-  state.plans.forEach(plan => plan.active = false);
+function selectBenchmark(benchmarkId) {
+  state.benchmarks.forEach(b => b.active = false);
   
-  // Activate selected plan
-  const selectedPlan = state.plans.find(p => p.id === planId);
-  if (selectedPlan) {
-    selectedPlan.active = true;
-    state.currentPlan = selectedPlan;
+  const selected = state.benchmarks.find(b => b.id === benchmarkId);
+  if (selected) {
+    selected.active = true;
+    state.currentBenchmark = selected;
   }
   
   saveToLocalStorage();
-  renderPlans();
+  renderBenchmarks();
   updateDashboard();
-  showToast('Plan activated!');
+  showToast('Benchmark activated');
 }
 
-function deletePlan(event, planId) {
+function deleteBenchmark(event, benchmarkId) {
   event.stopPropagation();
   
-  if (confirm('Delete this plan?')) {
-    state.plans = state.plans.filter(plan => plan.id !== planId);
-    
-    // Set new active plan if deleted plan was active
-    if (state.currentPlan?.id === planId) {
-      state.currentPlan = state.plans[0] || null;
-      if (state.currentPlan) {
-        state.currentPlan.active = true;
-      }
+  if (!confirm('Delete this benchmark?')) return;
+  
+  state.benchmarks = state.benchmarks.filter(b => b.id !== benchmarkId);
+  
+  if (state.currentBenchmark?.id === benchmarkId) {
+    state.currentBenchmark = state.benchmarks[0] || null;
+    if (state.currentBenchmark) {
+      state.currentBenchmark.active = true;
     }
-    
-    saveToLocalStorage();
-    renderPlans();
-    updateDashboard();
-    showToast('Plan deleted');
   }
+  
+  saveToLocalStorage();
+  renderBenchmarks();
+  updateDashboard();
+  showToast('Benchmark deleted');
 }
 
-function showCreatePlan() {
-  document.getElementById('create-plan-modal').classList.remove('hidden');
+function showCreateBenchmark() {
+  const modal = document.getElementById('create-plan-modal');
+  if (modal) modal.classList.remove('hidden');
 }
 
-function hideCreatePlan() {
-  document.getElementById('create-plan-modal').classList.add('hidden');
-  document.getElementById('plan-form').reset();
+function hideCreateBenchmark() {
+  const modal = document.getElementById('create-plan-modal');
+  if (modal) modal.classList.add('hidden');
+  
+  const form = document.getElementById('plan-form');
+  if (form) form.reset();
 }
 
 // ===================================
-// PROFILE MANAGEMENT
+// PROFILE
 // ===================================
 function setupProfileForm() {
-  const profileForm = document.getElementById('profile-form');
+  const form = document.getElementById('profile-form');
+  if (!form) return;
   
-  // Load current profile data
+  // Load current profile
   document.getElementById('user-name').value = state.user.name;
   document.getElementById('user-email').value = state.user.email;
-  if (state.user.age) document.getElementById('user-age').value = state.user.age;
-  if (state.user.weight) document.getElementById('user-weight').value = state.user.weight;
-  document.getElementById('user-goal').value = state.user.goal;
   
-  profileForm.addEventListener('submit', (e) => {
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
     saveProfile();
   });
@@ -748,46 +726,49 @@ function setupProfileForm() {
 
 function saveProfile() {
   state.user = {
-    name: document.getElementById('user-name').value.trim(),
-    email: document.getElementById('user-email').value.trim(),
-    age: parseFloat(document.getElementById('user-age').value) || null,
-    weight: parseFloat(document.getElementById('user-weight').value) || null,
-    goal: document.getElementById('user-goal').value
+    name: document.getElementById('user-name')?.value.trim() || state.user.name,
+    email: document.getElementById('user-email')?.value.trim() || state.user.email,
+    productArea: document.getElementById('user-product-area')?.value || state.user.productArea,
+    team: document.getElementById('user-team')?.value.trim() || state.user.team,
+    focus: document.getElementById('user-focus')?.value || state.user.focus
   };
   
-  // Update profile display
-  document.getElementById('profile-name').textContent = state.user.name;
-  document.getElementById('profile-email').textContent = state.user.email;
+  // Update display
+  const displayName = document.getElementById('profile-display-name');
+  const displayEmail = document.getElementById('profile-display-email');
+  
+  if (displayName) displayName.textContent = state.user.name;
+  if (displayEmail) displayEmail.textContent = state.user.email;
   
   saveToLocalStorage();
-  showToast('Profile updated successfully!');
+  showToast('Profile updated successfully');
 }
 
 // ===================================
-// UI HELPERS
+// DELETE AND CLEAR
 // ===================================
-function showLoading(message = 'Loading...') {
-  const overlay = document.getElementById('loading-overlay');
-  const loadingText = document.querySelector('.loading-text');
-  loadingText.textContent = message;
-  overlay.classList.remove('hidden');
+function deleteSignal(signalId) {
+  if (!confirm('Remove this signal?')) return;
+  
+  state.signals = state.signals.filter(signal => signal.id !== signalId);
+  saveToLocalStorage();
+  updateDashboard();
+  renderRecentSignals();
+  renderTimeline();
+  showToast('Signal removed');
 }
 
-function hideLoading() {
-  const overlay = document.getElementById('loading-overlay');
-  overlay.classList.add('hidden');
-}
-
-function showToast(message, duration = 3000) {
-  const toast = document.getElementById('toast');
-  const toastMessage = document.getElementById('toast-message');
+function clearTodaySignals() {
+  if (!confirm('Clear all signals from today?')) return;
   
-  toastMessage.textContent = message;
-  toast.classList.remove('hidden');
+  const today = new Date().toLocaleDateString();
+  state.signals = state.signals.filter(signal => signal.date !== today);
   
-  setTimeout(() => {
-    toast.classList.add('hidden');
-  }, duration);
+  saveToLocalStorage();
+  updateDashboard();
+  renderRecentSignals();
+  renderTimeline();
+  showToast('Today\'s signals cleared');
 }
 
 // ===================================
@@ -795,9 +776,9 @@ function showToast(message, duration = 3000) {
 // ===================================
 function saveToLocalStorage() {
   try {
-    localStorage.setItem('calocount-state', JSON.stringify({
-      meals: state.meals,
-      plans: state.plans,
+    localStorage.setItem('signalboard-state', JSON.stringify({
+      signals: state.signals,
+      benchmarks: state.benchmarks,
       user: state.user,
       theme: state.theme
     }));
@@ -808,16 +789,15 @@ function saveToLocalStorage() {
 
 function loadFromLocalStorage() {
   try {
-    const saved = localStorage.getItem('calocount-state');
+    const saved = localStorage.getItem('signalboard-state');
     if (saved) {
       const data = JSON.parse(saved);
-      state.meals = data.meals || [];
-      state.plans = data.plans || state.plans;
+      state.signals = data.signals || [];
+      state.benchmarks = data.benchmarks || state.benchmarks;
       state.user = data.user || state.user;
       state.theme = data.theme || 'light';
       
-      // Set active plan
-      state.currentPlan = state.plans.find(p => p.active) || state.plans[0];
+      state.currentBenchmark = state.benchmarks.find(b => b.active) || state.benchmarks[0];
     }
   } catch (error) {
     console.error('Error loading from localStorage:', error);
@@ -825,8 +805,69 @@ function loadFromLocalStorage() {
 }
 
 // ===================================
-// UTILITY FUNCTIONS
+// UI HELPERS
 // ===================================
+function showLoading(message = 'Loading...') {
+  const overlay = document.getElementById('loading-overlay');
+  const loadingText = document.querySelector('.loading-text');
+  if (loadingText) loadingText.textContent = message;
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+function showToast(message, duration = 3000) {
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toast-message');
+  
+  if (toastMessage) toastMessage.textContent = message;
+  if (toast) {
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, duration);
+  }
+}
+
+// ===================================
+// FORMATTING UTILITIES
+// ===================================
+function formatSource(source) {
+  const sources = {
+    github: 'GitHub',
+    support: 'Support',
+    community: 'Community',
+    sales: 'Sales',
+    internal: 'Internal'
+  };
+  return sources[source] || source;
+}
+
+function formatCategory(category) {
+  const categories = {
+    bug: 'Bug',
+    feature: 'Feature',
+    performance: 'Performance',
+    ux: 'UX',
+    documentation: 'Docs',
+    feedback: 'Feedback'
+  };
+  return categories[category] || category;
+}
+
+function formatUrgency(urgency) {
+  const levels = {
+    1: 'Low',
+    2: 'Medium',
+    3: 'High',
+    4: 'Critical'
+  };
+  return levels[urgency] || 'Unknown';
+}
+
 function formatDate(date) {
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
@@ -842,35 +883,27 @@ function formatTime(date) {
   });
 }
 
-// ===================================
-// EXPORT FOR HTML ACCESS
-// ===================================
-window.switchView = switchView;
-window.clearTodayMeals = clearTodayMeals;
-window.deleteMeal = deleteMeal;
-window.showCreatePlan = showCreatePlan;
-window.hideCreatePlan = hideCreatePlan;
-window.selectPlan = selectPlan;
-window.deletePlan = deletePlan;
-
-// ===================================
-// PROFILE PICTURE UPLOAD & LIVE UPDATES
-// ===================================
-
-// Update profile display (name and email at top of profile card)
-function updateProfileDisplay() {
-  const displayName = document.getElementById('profile-display-name');
-  const displayEmail = document.getElementById('profile-display-email');
-  
-  if (displayName && state.user.name) {
-    displayName.textContent = state.user.name;
-  }
-  if (displayEmail && state.user.email) {
-    displayEmail.textContent = state.user.email;
-  }
+function formatDateTime(timestamp) {
+  const date = new Date(timestamp);
+  return `${formatDate(date)} at ${formatTime(date)}`;
 }
 
-// Profile picture upload functionality
+// ===================================
+// INSIGHTS REFRESH
+// ===================================
+function refreshInsights() {
+  showLoading('Refreshing insights...');
+  
+  setTimeout(() => {
+    hideLoading();
+    showToast('Insights updated');
+    console.log('→ Insights refreshed');
+  }, 1000);
+}
+
+// ===================================
+// PROFILE AVATAR UPLOAD
+// ===================================
 function setupProfilePictureUpload() {
   const editBtn = document.getElementById('edit-avatar-btn');
   const fileInput = document.getElementById('avatar-upload');
@@ -879,34 +912,28 @@ function setupProfilePictureUpload() {
 
   if (!editBtn || !fileInput) return;
 
-  // Trigger file input on button click
   editBtn.addEventListener('click', () => {
     fileInput.click();
   });
 
-  // Handle file selection
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.match('image.*')) {
       showToast('Please select an image file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       showToast('Image must be less than 5MB');
       return;
     }
 
-    // Read and display image
     const reader = new FileReader();
     reader.onload = (event) => {
       const imageData = event.target.result;
       
-      // Update avatar display
       if (avatarImg) {
         avatarImg.src = imageData;
         avatarImg.classList.remove('hidden');
@@ -915,22 +942,17 @@ function setupProfilePictureUpload() {
         avatarPlaceholder.style.display = 'none';
       }
 
-      // Save to state and storage
       state.user.avatar = imageData;
       saveToLocalStorage();
-
-      // Show success message
-      showToast('Profile picture updated!');
+      showToast('Profile picture updated');
     };
 
     reader.readAsDataURL(file);
   });
 
-  // Load saved avatar on page load
   loadSavedAvatar();
 }
 
-// Load saved avatar
 function loadSavedAvatar() {
   if (!state.user || !state.user.avatar) return;
 
@@ -946,40 +968,142 @@ function loadSavedAvatar() {
   }
 }
 
-// Enhanced profile form submission with live updates
-const profileForm = document.getElementById('profile-form');
-if (profileForm) {
-  profileForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const name = document.getElementById('user-name').value;
-    const email = document.getElementById('user-email').value;
-    const age = document.getElementById('user-age').value;
-    const weight = document.getElementById('user-weight').value;
-    const goal = document.getElementById('user-goal').value;
-    
-    state.user = {
-      ...state.user,
-      name,
-      email,
-      age,
-      weight,
-      goal
-    };
-    
-    // Update display name and email immediately
-    updateProfileDisplay();
-    
-    saveToLocalStorage();
-    showToast('Profile updated successfully!');
+// Initialize profile picture upload after a short delay
+setTimeout(() => {
+  setupProfilePictureUpload();
+}, 100);
+
+// ===================================
+// ANALYTICS INTEGRATION
+// ===================================
+function trackEvent(eventName, properties = {}) {
+  console.log(`[Analytics] ${eventName}`, properties);
+  // In production, this would send to analytics service
+}
+
+// Track key user actions
+function trackSignalCreated(signal) {
+  trackEvent('signal_created', {
+    category: signal.category,
+    source: signal.source,
+    tier: signal.tier,
+    impact: signal.impact
   });
 }
 
-// Initialize profile features on load
-setTimeout(() => {
-  setupProfilePictureUpload();
-  updateProfileDisplay();
-}, 100);
+function trackViewSwitch(viewName) {
+  trackEvent('view_switched', { view: viewName });
+}
 
-console.log('CaloCount Pro - Advanced AI Calorie Tracking');
-console.log('All features loaded successfully! 🎉');
+// ===================================
+// KEYBOARD SHORTCUTS
+// ===================================
+document.addEventListener('keydown', (e) => {
+  // Cmd/Ctrl + K: Quick capture
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    switchView('capture');
+  }
+  
+  // Cmd/Ctrl + D: Dashboard
+  if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+    e.preventDefault();
+    switchView('dashboard');
+  }
+  
+  // Escape: Close modals
+  if (e.key === 'Escape') {
+    hideCreateBenchmark();
+    hideSignalForm();
+  }
+});
+
+// ===================================
+// EXPORT FOR GLOBAL ACCESS
+// ===================================
+window.switchView = switchView;
+window.deleteSignal = deleteSignal;
+window.clearTodaySignals = clearTodaySignals;
+window.selectBenchmark = selectBenchmark;
+window.deleteBenchmark = deleteBenchmark;
+window.showCreateBenchmark = showCreateBenchmark;
+window.hideCreateBenchmark = hideCreateBenchmark;
+window.hideSignalForm = hideSignalForm;
+window.refreshInsights = refreshInsights;
+
+// ===================================
+// DEVELOPMENT HELPERS
+// ===================================
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  window.debugSignalBoard = () => {
+    console.log('=== SignalBoard Debug ===');
+    console.log('Current View:', state.currentView);
+    console.log('Signals:', state.signals.length);
+    console.log('Benchmarks:', state.benchmarks.length);
+    console.log('Current Benchmark:', state.currentBenchmark?.name);
+    console.log('User:', state.user.name);
+    console.log('Theme:', state.theme);
+    console.log('========================');
+  };
+  
+  window.generateDemoSignals = (count = 10) => {
+    const titles = [
+      'Workers timeout in EU region',
+      'TypeScript bindings request',
+      'R2 pricing feedback',
+      'Pages deployment regression',
+      'KV documentation gap',
+      'DNS propagation delay',
+      'Email routing feature request',
+      'CDN cache hit rate drop',
+      'API rate limiting confusion',
+      'Dashboard load time increase'
+    ];
+    
+    const sources = ['github', 'support', 'community', 'sales', 'internal'];
+    const categories = ['bug', 'feature', 'performance', 'ux', 'documentation'];
+    const tiers = ['enterprise', 'pro', 'free'];
+    
+    for (let i = 0; i < count; i++) {
+      const signal = {
+        id: Date.now() + i,
+        title: titles[Math.floor(Math.random() * titles.length)],
+        impact: Math.floor(Math.random() * 100) + 1,
+        urgency: Math.floor(Math.random() * 4) + 1,
+        source: sources[Math.floor(Math.random() * sources.length)],
+        category: categories[Math.floor(Math.random() * categories.length)],
+        tier: tiers[Math.floor(Math.random() * tiers.length)],
+        context: 'Generated demo signal for testing',
+        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
+      };
+      
+      state.signals.push(signal);
+    }
+    
+    saveToLocalStorage();
+    updateDashboard();
+    renderRecentSignals();
+    renderTimeline();
+    
+    console.log(`✓ Generated ${count} demo signals`);
+  };
+  
+  console.log('Development mode active');
+  console.log('Try: debugSignalBoard() or generateDemoSignals(20)');
+}
+
+// ===================================
+// FINAL INITIALIZATION LOG
+// ===================================
+console.log('╔══════════════════════════════════════╗');
+console.log('║      SignalBoard - PM Edition        ║');
+console.log('║  Customer Feedback Signal Tracker   ║');
+console.log('╚══════════════════════════════════════╝');
+console.log('');
+console.log('✓ Core application loaded');
+console.log('✓ State management initialized');
+console.log('✓ Event listeners attached');
+console.log('✓ Local storage connected');
+console.log('');
+console.log('Ready for product signal tracking');

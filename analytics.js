@@ -1,9 +1,10 @@
 // ===================================
-// ADVANCED ANALYTICS MODULE
-// Features: Charts, Trends, AI Insights, Predictions
+// SIGNALBOARD ANALYTICS ENGINE
+// Features: Trend Analysis, Insights, Forecasting, Risk Detection
+// Author: Emmanuel Ahishakiye
 // ===================================
 
-class AdvancedAnalytics {
+class SignalBoardAnalytics {
   constructor() {
     this.chartInstances = {};
     this.insights = [];
@@ -13,225 +14,287 @@ class AdvancedAnalytics {
       weekly: [],
       monthly: []
     };
+    this.riskIndicators = [];
     this.initializeAnalytics();
   }
 
+  // ===================================
+  // INITIALIZATION
+  // ===================================
   initializeAnalytics() {
+    console.log('Initializing SignalBoard Analytics Engine...');
+    
     this.calculateTrends();
     this.generateInsights();
     this.predictFutureTrends();
+    this.detectRisks();
     this.setupAnalyticsView();
+    
+    console.log('✓ Analytics engine ready');
   }
 
-  // Calculate trend data from meal history
+  // ===================================
+  // TREND CALCULATIONS
+  // ===================================
   calculateTrends() {
-    const meals = state.meals || [];
+    const signals = window.state?.signals || [];
     const now = new Date();
-    
-    // Daily trends (last 30 days)
+
+    // Reset trend data
+    this.trendData = {
+      daily: [],
+      weekly: [],
+      monthly: []
+    };
+
+    // Daily signal volume last 30 days
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = date.toLocaleDateString();
-      
-      const dayMeals = meals.filter(m => m.date === dateStr);
-      const totals = this.calculateDayTotals(dayMeals);
-      
+
+      const daySignals = signals.filter(s => s.date === dateStr);
+
       this.trendData.daily.push({
         date: dateStr,
         timestamp: date.getTime(),
-        ...totals
+        totalSignals: daySignals.length,
+        totalImpact: this.calculateTotalImpact(daySignals),
+        criticalCount: daySignals.filter(s => s.urgency >= 3).length,
+        bugCount: daySignals.filter(s => s.category === 'bug').length,
+        featureCount: daySignals.filter(s => s.category === 'feature').length,
+        avgUrgency: this.calculateAverage(daySignals.map(s => s.urgency)),
+        enterpriseCount: daySignals.filter(s => s.tier === 'enterprise').length
       });
     }
 
-    // Weekly trends (last 12 weeks)
+    // Weekly trends last 12 weeks
     for (let i = 11; i >= 0; i--) {
       const weekStart = new Date(now);
-      weekStart.setDate(weekStart.getDate() - (i * 7 + 7));
+      weekStart.setDate(weekStart.getDate() - i * 7);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 7);
-      
-      const weekMeals = meals.filter(m => {
-        const mealDate = new Date(m.timestamp);
-        return mealDate >= weekStart && mealDate < weekEnd;
+
+      const weekSignals = signals.filter(s => {
+        const ts = new Date(s.timestamp);
+        return ts >= weekStart && ts < weekEnd;
       });
-      
-      const totals = this.calculateWeekTotals(weekMeals);
-      
+
       this.trendData.weekly.push({
-        week: `Week ${12 - i}`,
+        week: `W${12 - i}`,
         timestamp: weekStart.getTime(),
-        ...totals
+        totalSignals: weekSignals.length,
+        totalImpact: this.calculateTotalImpact(weekSignals),
+        avgUrgency: this.calculateAverage(weekSignals.map(s => s.urgency)),
+        bugRatio: this.calculateCategoryRatio(weekSignals, 'bug'),
+        enterpriseRatio: this.calculateTierRatio(weekSignals, 'enterprise')
       });
     }
+
+    console.log(`→ Calculated trends for ${this.trendData.daily.length} days`);
   }
 
-  calculateDayTotals(meals) {
-    return meals.reduce((acc, meal) => ({
-      calories: acc.calories + (meal.calories || 0),
-      protein: acc.protein + (meal.protein || 0),
-      carbs: acc.carbs + (meal.carbs || 0),
-      fats: acc.fats + (meal.fats || 0),
-      mealCount: acc.mealCount + 1
-    }), { calories: 0, protein: 0, carbs: 0, fats: 0, mealCount: 0 });
+  calculateTotalImpact(signals) {
+    if (!signals.length) return 0;
+    return signals.reduce((sum, s) => sum + (s.impact || 0), 0);
   }
 
-  calculateWeekTotals(meals) {
-    const totals = this.calculateDayTotals(meals);
-    return {
-      avgCalories: totals.calories / 7,
-      avgProtein: totals.protein / 7,
-      avgCarbs: totals.carbs / 7,
-      avgFats: totals.fats / 7,
-      totalMeals: totals.mealCount
-    };
+  calculateAverage(values) {
+    if (!values.length) return 0;
+    const sum = values.reduce((a, b) => a + (b || 0), 0);
+    return Math.round((sum / values.length) * 10) / 10;
   }
 
-  // Generate AI-powered insights
+  calculateCategoryRatio(signals, category) {
+    if (!signals.length) return 0;
+    const count = signals.filter(s => s.category === category).length;
+    return Math.round((count / signals.length) * 100);
+  }
+
+  calculateTierRatio(signals, tier) {
+    if (!signals.length) return 0;
+    const count = signals.filter(s => s.tier === tier).length;
+    return Math.round((count / signals.length) * 100);
+  }
+
+  // ===================================
+  // INSIGHT GENERATION
+  // ===================================
   generateInsights() {
     this.insights = [];
+    const signals = window.state?.signals || [];
     
-    // Calorie consistency insight
-    const dailyCalories = this.trendData.daily.map(d => d.calories);
-    const avgCalories = dailyCalories.reduce((a, b) => a + b, 0) / dailyCalories.length;
-    const variance = this.calculateVariance(dailyCalories, avgCalories);
-    
-    if (variance < 200) {
+    if (signals.length === 0) {
       this.insights.push({
-        type: 'success',
-        icon: '🎯',
-        title: 'Excellent Consistency',
-        message: 'Your daily calorie intake is very consistent. This helps maintain steady progress.',
-        score: 95
+        type: 'info',
+        icon: '💡',
+        title: 'Getting Started',
+        message: 'Start capturing customer signals to see insights and trends appear here.',
+        score: 0
       });
-    } else if (variance < 400) {
+      return;
+    }
+
+    const recentDays = this.trendData.daily.slice(-7);
+    const previousWeek = this.trendData.daily.slice(-14, -7);
+
+    // Volume Analysis
+    const recentAvg = this.calculateAverage(recentDays.map(d => d.totalSignals));
+    const previousAvg = this.calculateAverage(previousWeek.map(d => d.totalSignals));
+    const volumeChange = previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) : 0;
+
+    if (volumeChange > 0.3) {
+      this.insights.push({
+        type: 'alert',
+        icon: '🚨',
+        title: 'Signal Volume Spike',
+        message: `Signal volume increased ${Math.round(volumeChange * 100)}% week over week. This may indicate product friction, a recent release issue, or increased customer engagement.`,
+        score: Math.min(100, 50 + Math.round(volumeChange * 50))
+      });
+    } else if (volumeChange < -0.3) {
       this.insights.push({
         type: 'warning',
-        icon: '⚡',
-        title: 'Moderate Variance',
-        message: 'Your calorie intake varies moderately. Try to maintain more consistent eating patterns.',
-        score: 70
+        icon: '📉',
+        title: 'Signal Volume Declining',
+        message: `Signal volume decreased ${Math.abs(Math.round(volumeChange * 100))}% week over week. Monitor customer engagement levels.`,
+        score: 60
       });
     } else {
       this.insights.push({
-        type: 'alert',
-        icon: '📊',
-        title: 'High Variance Detected',
-        message: 'Your daily calories fluctuate significantly. Consider meal planning for better consistency.',
-        score: 45
+        type: 'success',
+        icon: '✅',
+        title: 'Stable Signal Flow',
+        message: 'Signal volume is within expected range, suggesting stable product performance and consistent feedback collection.',
+        score: 85
       });
     }
 
-    // Protein intake insight
-    const recentDays = this.trendData.daily.slice(-7);
-    const avgProtein = recentDays.reduce((a, b) => a + b.protein, 0) / 7;
-    const plan = state.currentPlan || state.plans[0];
-    
-    if (avgProtein >= plan.protein * 0.9) {
+    // Bug Analysis
+    const recentBugs = recentDays.reduce((sum, d) => sum + d.bugCount, 0);
+    const totalRecent = recentDays.reduce((sum, d) => sum + d.totalSignals, 0);
+    const bugRatio = totalRecent > 0 ? recentBugs / totalRecent : 0;
+
+    if (bugRatio > 0.4) {
       this.insights.push({
-        type: 'success',
-        icon: '💪',
-        title: 'Protein Goals Met',
-        message: `Averaging ${Math.round(avgProtein)}g protein daily. Great for muscle maintenance!`,
-        score: 90
+        type: 'alert',
+        icon: '🐛',
+        title: 'High Bug Signal Ratio',
+        message: `${Math.round(bugRatio * 100)}% of recent signals relate to bugs or reliability issues. Consider prioritizing stability work and root cause analysis.`,
+        score: 40
       });
-    } else if (avgProtein >= plan.protein * 0.7) {
+    } else if (bugRatio > 0.25) {
       this.insights.push({
-        type: 'info',
-        icon: '🥩',
-        title: 'Protein Slightly Low',
-        message: `Averaging ${Math.round(avgProtein)}g daily. Target is ${plan.protein}g. Add more lean proteins.`,
+        type: 'warning',
+        icon: '⚠️',
+        title: 'Elevated Bug Reports',
+        message: `${Math.round(bugRatio * 100)}% of recent signals are bug-related. Monitor for patterns and consider addressing common issues.`,
         score: 65
       });
     }
 
-    // Meal timing insight
-    const mealTimes = state.meals.slice(-21).map(m => new Date(m.timestamp).getHours());
-    const lateMeals = mealTimes.filter(h => h >= 21).length;
-    
-    if (lateMeals > 7) {
+    // Critical Signal Analysis
+    const criticalCount = recentDays.reduce((sum, d) => sum + d.criticalCount, 0);
+    const criticalRatio = totalRecent > 0 ? criticalCount / totalRecent : 0;
+
+    if (criticalRatio > 0.2) {
+      this.insights.push({
+        type: 'alert',
+        icon: '🔥',
+        title: 'High Critical Signal Rate',
+        message: `${Math.round(criticalRatio * 100)}% of recent signals are marked as high urgency or critical. Immediate action may be required.`,
+        score: 35
+      });
+    }
+
+    // Urgency Trend
+    const urgencyValues = recentDays.map(d => d.avgUrgency);
+    const urgencySlope = this.calculateTrendSlope(urgencyValues);
+
+    if (urgencySlope > 0.2) {
       this.insights.push({
         type: 'warning',
-        icon: '🌙',
-        title: 'Late Night Eating',
-        message: `${lateMeals} meals after 9 PM in the last 3 weeks. Earlier eating may improve sleep quality.`,
-        score: 50
+        icon: '📈',
+        title: 'Rising Signal Urgency',
+        message: 'Average signal urgency is trending upward. Customer pain points may be intensifying.',
+        score: 55
       });
-    }
-
-    // Macro balance insight
-    const macroBalance = this.analyzeMacroBalance(recentDays);
-    if (macroBalance.balanced) {
+    } else if (urgencySlope < -0.2) {
       this.insights.push({
         type: 'success',
-        icon: '⚖️',
-        title: 'Balanced Macros',
-        message: 'Your protein, carbs, and fats are well-balanced for optimal nutrition.',
-        score: 88
+        icon: '📉',
+        title: 'Declining Signal Urgency',
+        message: 'Average signal urgency is trending downward. Recent improvements may be having positive impact.',
+        score: 80
       });
     }
 
-    // Hydration reminder (advanced feature)
+    // Enterprise Customer Focus
+    const enterpriseCount = recentDays.reduce((sum, d) => sum + d.enterpriseCount, 0);
+    const enterpriseRatio = totalRecent > 0 ? enterpriseCount / totalRecent : 0;
+
+    if (enterpriseRatio > 0.5) {
+      this.insights.push({
+        type: 'info',
+        icon: '🏢',
+        title: 'High Enterprise Signal Volume',
+        message: `${Math.round(enterpriseRatio * 100)}% of recent signals come from enterprise customers. Consider prioritizing enterprise-impacting issues.`,
+        score: 70
+      });
+    }
+
+    // Actionable Recommendation
     this.insights.push({
       type: 'info',
-      icon: '💧',
-      title: 'Stay Hydrated',
-      message: 'Remember to drink 8-10 glasses of water daily for optimal metabolism.',
+      icon: '💡',
+      title: 'Recommended Action',
+      message: 'Review top recurring signal themes to identify quick wins for the next sprint. Focus on high-impact, low-effort improvements.',
       score: 75
     });
+
+    console.log(`→ Generated ${this.insights.length} insights`);
   }
 
-  analyzeMacroBalance(days) {
-    const totals = days.reduce((acc, day) => ({
-      protein: acc.protein + day.protein,
-      carbs: acc.carbs + day.carbs,
-      fats: acc.fats + day.fats
-    }), { protein: 0, carbs: 0, fats: 0 });
-
-    const proteinCals = totals.protein * 4;
-    const carbsCals = totals.carbs * 4;
-    const fatsCals = totals.fats * 9;
-    const totalCals = proteinCals + carbsCals + fatsCals;
-
-    const proteinPercent = (proteinCals / totalCals) * 100;
-    const carbsPercent = (carbsCals / totalCals) * 100;
-    const fatsPercent = (fatsCals / totalCals) * 100;
-
-    // Check if within healthy ranges
-    const balanced = proteinPercent >= 15 && proteinPercent <= 35 &&
-                    carbsPercent >= 45 && carbsPercent <= 65 &&
-                    fatsPercent >= 20 && fatsPercent <= 35;
-
-    return { balanced, proteinPercent, carbsPercent, fatsPercent };
+  calculateTrendSlope(values) {
+    if (values.length < 2) return 0;
+    const x = values.map((_, i) => i);
+    const y = values;
+    const regression = this.linearRegression(x, y);
+    return regression.slope;
   }
 
-  calculateVariance(values, mean) {
-    const squareDiffs = values.map(value => Math.pow(value - mean, 2));
-    return Math.sqrt(squareDiffs.reduce((a, b) => a + b, 0) / values.length);
-  }
-
-  // Predict future trends using linear regression
+  // ===================================
+  // FORECASTING
+  // ===================================
   predictFutureTrends() {
-    const recentData = this.trendData.daily.slice(-14);
-    if (recentData.length < 7) return;
-
-    const xValues = recentData.map((_, i) => i);
-    const yValues = recentData.map(d => d.calories);
-
-    const regression = this.linearRegression(xValues, yValues);
+    this.predictions = [];
+    const recent = this.trendData.daily.slice(-14);
     
+    if (recent.length < 7) {
+      console.log('→ Insufficient data for forecasting');
+      return;
+    }
+
+    const x = recent.map((_, i) => i);
+    const y = recent.map(d => d.totalSignals);
+    const regression = this.linearRegression(x, y);
+
     // Predict next 7 days
     for (let i = 1; i <= 7; i++) {
-      const predictedCalories = regression.slope * (recentData.length + i) + regression.intercept;
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + i);
+
+      const predicted = regression.slope * (recent.length + i) + regression.intercept;
       
       this.predictions.push({
         date: futureDate.toLocaleDateString(),
-        calories: Math.max(0, Math.round(predictedCalories)),
-        confidence: Math.max(60, 95 - (i * 5)) // Confidence decreases over time
+        day: futureDate.toLocaleDateString('en-US', { weekday: 'short' }),
+        projectedSignals: Math.max(0, Math.round(predicted)),
+        confidence: Math.max(60, 95 - i * 5), // Confidence decreases over time
+        trend: regression.slope > 0 ? 'increasing' : regression.slope < 0 ? 'decreasing' : 'stable'
       });
     }
+
+    console.log(`→ Generated ${this.predictions.length} predictions`);
   }
 
   linearRegression(x, y) {
@@ -241,104 +304,121 @@ class AdvancedAnalytics {
     const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
     const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
+    const denominator = (n * sumXX - sumX * sumX);
+    const slope = denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
+    const intercept = n !== 0 ? (sumY - slope * sumX) / n : 0;
 
     return { slope, intercept };
   }
 
-  // Setup analytics view in UI
-  setupAnalyticsView() {
-    // This will be called when analytics view is shown
-    console.log('Analytics module initialized with', this.insights.length, 'insights');
+  // ===================================
+  // RISK DETECTION
+  // ===================================
+  detectRisks() {
+    this.riskIndicators = [];
+    const signals = window.state?.signals || [];
+    
+    if (signals.length < 5) return;
+
+    const recentDays = this.trendData.daily.slice(-7);
+    const recentSignals = signals.filter(s => {
+      const daysAgo = (Date.now() - new Date(s.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+      return daysAgo <= 7;
+    });
+
+    // Churn Risk Detection
+    const enterpriseSignals = recentSignals.filter(s => s.tier === 'enterprise');
+    const criticalEnterpriseSignals = enterpriseSignals.filter(s => s.urgency >= 3);
+    
+    if (criticalEnterpriseSignals.length >= 3) {
+      this.riskIndicators.push({
+        type: 'churn',
+        severity: 'high',
+        title: 'Enterprise Churn Risk',
+        description: `${criticalEnterpriseSignals.length} critical signals from enterprise customers in the last week`,
+        affectedCount: new Set(criticalEnterpriseSignals.map(s => s.id)).size
+      });
+    }
+
+    // Reliability Risk
+    const bugSignals = recentSignals.filter(s => s.category === 'bug');
+    const highPriorityBugs = bugSignals.filter(s => s.urgency >= 3);
+    
+    if (highPriorityBugs.length >= 5) {
+      this.riskIndicators.push({
+        type: 'reliability',
+        severity: 'high',
+        title: 'Product Stability Concern',
+        description: `${highPriorityBugs.length} high-priority bug reports in the last week`,
+        affectedCount: highPriorityBugs.length
+      });
+    }
+
+    // Velocity Risk
+    const avgSignalsPerDay = this.calculateAverage(recentDays.map(d => d.totalSignals));
+    if (avgSignalsPerDay > 15) {
+      this.riskIndicators.push({
+        type: 'velocity',
+        severity: 'medium',
+        title: 'High Feedback Velocity',
+        description: `Averaging ${Math.round(avgSignalsPerDay)} signals per day. May indicate systemic issues.`,
+        affectedCount: Math.round(avgSignalsPerDay * 7)
+      });
+    }
+
+    console.log(`→ Detected ${this.riskIndicators.length} risk indicators`);
   }
 
-  // Render calorie trend chart (using canvas)
-  renderCalorieTrendChart(canvasId) {
+  // ===================================
+  // CHART RENDERING
+  // ===================================
+  renderSignalTrendChart(canvasId) {
     const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
+    if (!canvas) {
+      console.warn(`Canvas ${canvasId} not found`);
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
     const data = this.trendData.daily.slice(-14);
-    
-    // Set canvas size
+
+    if (data.length === 0) {
+      this.renderEmptyChart(ctx, canvas);
+      return;
+    }
+
+    // Setup canvas for high DPI displays
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
 
-    const width = rect.width;
-    const height = rect.height;
-    const padding = 40;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
+    const padding = 50;
+    const w = rect.width - padding * 2;
+    const h = rect.height - padding * 2;
 
     // Clear canvas
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Find min/max for scaling
-    const values = data.map(d => d.calories);
-    const maxValue = Math.max(...values, state.currentPlan?.calories || 2000);
-    const minValue = Math.min(...values, 0);
+    // Get data values
+    const values = data.map(d => d.totalSignals);
+    const max = Math.max(...values, 10);
+    const min = Math.min(...values, 0);
 
     // Draw grid lines
-    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border-color') || '#e5e7eb';
-    ctx.lineWidth = 1;
-    
-    for (let i = 0; i <= 5; i++) {
-      const y = padding + (chartHeight / 5) * i;
-      ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(width - padding, y);
-      ctx.stroke();
-    }
+    this.drawGrid(ctx, padding, w, h, max);
 
-    // Draw target line
-    if (state.currentPlan) {
-      const targetY = padding + chartHeight - ((state.currentPlan.calories - minValue) / (maxValue - minValue)) * chartHeight;
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(padding, targetY);
-      ctx.lineTo(width - padding, targetY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // Draw area fill
-    const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
-    
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.moveTo(padding, height - padding);
-    
-    data.forEach((point, i) => {
-      const x = padding + (chartWidth / (data.length - 1)) * i;
-      const y = padding + chartHeight - ((point.calories - minValue) / (maxValue - minValue)) * chartHeight;
-      
-      if (i === 0) {
-        ctx.lineTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-    
-    ctx.lineTo(width - padding, height - padding);
-    ctx.closePath();
-    ctx.fill();
-
-    // Draw line
+    // Draw line chart
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.beginPath();
-    
-    data.forEach((point, i) => {
-      const x = padding + (chartWidth / (data.length - 1)) * i;
-      const y = padding + chartHeight - ((point.calories - minValue) / (maxValue - minValue)) * chartHeight;
+
+    data.forEach((d, i) => {
+      const x = padding + (w / (data.length - 1)) * i;
+      const y = padding + h - ((d.totalSignals - min) / (max - min || 1)) * h;
       
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -346,203 +426,136 @@ class AdvancedAnalytics {
         ctx.lineTo(x, y);
       }
     });
-    
+
     ctx.stroke();
 
     // Draw points
-    data.forEach((point, i) => {
-      const x = padding + (chartWidth / (data.length - 1)) * i;
-      const y = padding + chartHeight - ((point.calories - minValue) / (maxValue - minValue)) * chartHeight;
+    ctx.fillStyle = '#6366f1';
+    data.forEach((d, i) => {
+      const x = padding + (w / (data.length - 1)) * i;
+      const y = padding + h - ((d.totalSignals - min) / (max - min || 1)) * h;
       
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#6366f1';
-      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
     });
 
     // Draw labels
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b7280';
+    this.drawLabels(ctx, data, padding, w, h);
+  }
+
+  drawGrid(ctx, padding, w, h, max) {
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+
+    // Horizontal grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (h / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(padding + w, y);
+      ctx.stroke();
+
+      // Y-axis labels
+      const value = Math.round(max * (1 - i / 4));
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '12px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(value.toString(), padding - 10, y + 4);
+    }
+
+    ctx.setLineDash([]);
+  }
+
+  drawLabels(ctx, data, padding, w, h) {
+    ctx.fillStyle = '#6b7280';
     ctx.font = '11px Inter, sans-serif';
     ctx.textAlign = 'center';
-    
-    data.forEach((point, i) => {
-      if (i % 2 === 0 || data.length <= 7) {
-        const x = padding + (chartWidth / (data.length - 1)) * i;
-        const date = new Date(point.date);
+
+    // X-axis labels (every other day)
+    data.forEach((d, i) => {
+      if (i % 2 === 0 || i === data.length - 1) {
+        const x = padding + (w / (data.length - 1)) * i;
+        const date = new Date(d.date);
         const label = `${date.getMonth() + 1}/${date.getDate()}`;
-        ctx.fillText(label, x, height - padding + 20);
+        ctx.fillText(label, x, padding + h + 20);
       }
     });
   }
 
-  // Render macro distribution donut chart
-  renderMacroDonutChart(canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    
-    // Calculate recent macro totals
-    const recentDays = this.trendData.daily.slice(-7);
-    const totals = recentDays.reduce((acc, day) => ({
-      protein: acc.protein + day.protein,
-      carbs: acc.carbs + day.carbs,
-      fats: acc.fats + day.fats
-    }), { protein: 0, carbs: 0, fats: 0 });
-
-    const total = totals.protein + totals.carbs + totals.fats;
-    if (total === 0) return;
-
-    const data = [
-      { label: 'Protein', value: totals.protein, color: '#3b82f6' },
-      { label: 'Carbs', value: totals.carbs, color: '#10b981' },
-      { label: 'Fats', value: totals.fats, color: '#f59e0b' }
-    ];
-
-    // Set canvas size
-    const dpr = window.devicePixelRatio || 1;
+  renderEmptyChart(ctx, canvas) {
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
-    const width = rect.width;
-    const height = rect.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 3;
-    const innerRadius = radius * 0.6;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    let currentAngle = -Math.PI / 2;
-
-    data.forEach((segment) => {
-      const sliceAngle = (segment.value / total) * Math.PI * 2;
-      
-      // Draw segment
-      ctx.fillStyle = segment.color;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-      ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
-      ctx.closePath();
-      ctx.fill();
-
-      // Draw label
-      const midAngle = currentAngle + sliceAngle / 2;
-      const labelRadius = radius + 30;
-      const labelX = centerX + Math.cos(midAngle) * labelRadius;
-      const labelY = centerY + Math.sin(midAngle) * labelRadius;
-      
-      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-primary') || '#111827';
-      ctx.font = 'bold 13px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${Math.round((segment.value / total) * 100)}%`, labelX, labelY);
-      
-      ctx.font = '11px Inter, sans-serif';
-      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b7280';
-      ctx.fillText(segment.label, labelX, labelY + 15);
-
-      currentAngle += sliceAngle;
-    });
-
-    // Draw center circle
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw center text
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-primary') || '#111827';
-    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '14px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Macros', centerX, centerY - 8);
-    ctx.font = '12px Inter, sans-serif';
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b7280';
-    ctx.fillText('Last 7 Days', centerX, centerY + 8);
+    ctx.fillText('No data available yet', rect.width / 2, rect.height / 2);
   }
 
-  // Render weekly progress chart
-  renderWeeklyProgressChart(canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
+  // ===================================
+  // ANALYTICS VIEW SETUP
+  // ===================================
+  setupAnalyticsView() {
+    // Render charts if canvas exists
+    setTimeout(() => {
+      this.renderSignalTrendChart('trend-chart');
+    }, 100);
 
-    const ctx = canvas.getContext('2d');
-    const data = this.trendData.weekly.slice(-8);
-    
-    // Set canvas size
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    console.log('→ Analytics view configured');
+  }
 
-    const width = rect.width;
-    const height = rect.height;
-    const padding = 40;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
-    const barWidth = chartWidth / data.length * 0.7;
-    const barSpacing = chartWidth / data.length;
+  // ===================================
+  // PUBLIC REFRESH METHOD
+  // ===================================
+  refresh() {
+    console.log('Refreshing analytics...');
+    this.initializeAnalytics();
+  }
 
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Find max value
-    const maxValue = Math.max(...data.map(d => d.avgCalories), state.currentPlan?.calories || 2000);
-
-    // Draw bars
-    data.forEach((week, i) => {
-      const barHeight = (week.avgCalories / maxValue) * chartHeight;
-      const x = padding + barSpacing * i + (barSpacing - barWidth) / 2;
-      const y = padding + chartHeight - barHeight;
-
-      // Create gradient for bar
-      const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
-      gradient.addColorStop(0, '#8b5cf6');
-      gradient.addColorStop(1, '#6366f1');
-
-      // Draw bar
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.roundRect(x, y, barWidth, barHeight, [8, 8, 0, 0]);
-      ctx.fill();
-
-      // Draw value
-      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b7280';
-      ctx.font = 'bold 11px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(Math.round(week.avgCalories), x + barWidth / 2, y - 8);
-
-      // Draw label
-      ctx.font = '10px Inter, sans-serif';
-      ctx.fillText(`W${i + 1}`, x + barWidth / 2, height - padding + 20);
-    });
-
-    // Add roundRect method if not available
-    if (!ctx.roundRect) {
-      ctx.roundRect = function(x, y, width, height, radii) {
-        this.beginPath();
-        this.moveTo(x + radii[0], y);
-        this.lineTo(x + width - radii[1], y);
-        this.quadraticCurveTo(x + width, y, x + width, y + radii[1]);
-        this.lineTo(x + width, y + height);
-        this.lineTo(x, y + height);
-        this.lineTo(x, y + radii[0]);
-        this.quadraticCurveTo(x, y, x + radii[0], y);
-      };
-    }
+  // ===================================
+  // EXPORT DATA
+  // ===================================
+  exportAnalytics() {
+    return {
+      insights: this.insights,
+      predictions: this.predictions,
+      riskIndicators: this.riskIndicators,
+      trendData: this.trendData,
+      generatedAt: new Date().toISOString()
+    };
   }
 }
 
-// Export for global access
-window.AdvancedAnalytics = AdvancedAnalytics;
+// ===================================
+// GLOBAL INITIALIZATION
+// ===================================
+window.SignalBoardAnalytics = SignalBoardAnalytics;
 window.analyticsInstance = null;
 
-console.log('📊 Advanced Analytics Module Loaded');
+// Auto-initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.analyticsInstance) {
+    window.analyticsInstance = new SignalBoardAnalytics();
+  }
+});
+
+// Refresh analytics when switching to analytics view
+const originalSwitchView = window.switchView;
+if (originalSwitchView) {
+  window.switchView = function(viewName) {
+    originalSwitchView(viewName);
+    
+    if (viewName === 'analytics' && window.analyticsInstance) {
+      setTimeout(() => {
+        window.analyticsInstance.refresh();
+      }, 300);
+    }
+  };
+}
+
+console.log('📊 SignalBoard Analytics Engine Loaded');
+console.log('→ Trend analysis, forecasting, and risk detection ready');

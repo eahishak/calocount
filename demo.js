@@ -1,504 +1,557 @@
 // ===================================
-// DEMO SCENARIOS & USAGE EXAMPLES
-// Copy these into browser console to test features
+// SIGNALBOARD DEMO DATA & SCENARIOS
+// Realistic PM feedback scenarios with proper analytics
+// Author: Emmanuel Ahishakiye
 // ===================================
 
-// ===================================
-// 1. POPULATE WITH DEMO DATA
-// ===================================
+(function() {
+  'use strict';
 
-function loadDemoData() {
-  console.log('🎬 Loading demo data...');
-  
-  // Clear existing data
-  state.meals = [];
-  
-  // Add meals for the past 14 days
-  const mealTemplates = [
-    { name: 'Breakfast Oatmeal', calories: 320, protein: 12, carbs: 45, fats: 8 },
-    { name: 'Chicken Salad', calories: 450, protein: 38, carbs: 32, fats: 18 },
-    { name: 'Salmon with Rice', calories: 580, protein: 42, carbs: 58, fats: 16 },
-    { name: 'Greek Yogurt Bowl', calories: 280, protein: 24, carbs: 28, fats: 8 },
-    { name: 'Turkey Sandwich', calories: 420, protein: 32, carbs: 46, fats: 12 },
-    { name: 'Protein Smoothie', calories: 340, protein: 28, carbs: 38, fats: 8 },
-    { name: 'Grilled Steak', calories: 520, protein: 48, carbs: 12, fats: 28 },
-    { name: 'Veggie Stir Fry', calories: 380, protein: 18, carbs: 48, fats: 14 }
-  ];
-  
-  // Generate meals for past 14 days
-  for (let daysAgo = 13; daysAgo >= 0; daysAgo--) {
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    
-    // 2-4 meals per day
-    const mealsPerDay = 2 + Math.floor(Math.random() * 3);
-    
-    for (let meal = 0; meal < mealsPerDay; meal++) {
-      const template = mealTemplates[Math.floor(Math.random() * mealTemplates.length)];
-      const variance = 0.8 + Math.random() * 0.4; // ±20% variance
-      
-      state.meals.push({
-        id: Date.now() + Math.random(),
-        name: template.name,
-        calories: Math.round(template.calories * variance),
-        protein: Math.round(template.protein * variance),
-        carbs: Math.round(template.carbs * variance),
-        fats: Math.round(template.fats * variance),
-        portion: 1,
-        timestamp: date.toISOString(),
-        date: date.toLocaleDateString(),
-        notes: 'Demo meal'
-      });
-    }
-  }
-  
-  // Update UI
-  saveToLocalStorage();
-  updateDashboard();
-  renderRecentMeals();
-  renderHistory();
-  
-  console.log('✅ Demo data loaded!', state.meals.length, 'meals added');
-  showToast(`${state.meals.length} demo meals loaded!`);
-}
+  // ===================================
+  // DEMO DATA GENERATORS
+  // ===================================
 
-// ===================================
-// 2. TRIGGER ADVANCED ANIMATIONS
-// ===================================
-
-function demoParticleEffects() {
-  console.log('✨ Demonstrating particle effects...');
-  
-  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
-  
-  // Create bursts at random positions
-  for (let i = 0; i < 5; i++) {
-    setTimeout(() => {
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * window.innerHeight;
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      
-      window.advancedAnimations.createParticleBurst(x, y, color, 25);
-    }, i * 500);
-  }
-  
-  console.log('💥 Particle effects triggered!');
-}
-
-function demoConfetti() {
-  console.log('🎉 Creating confetti celebration...');
-  window.advancedAnimations.createConfetti();
-  showToast('🎊 Celebration time!');
-}
-
-function demoSuccessAnimation() {
-  console.log('✅ Success animation demo...');
-  window.advancedAnimations.successPulse();
-  
-  const button = document.querySelector('.btn-primary');
-  if (button) {
-    const rect = button.getBoundingClientRect();
-    window.advancedAnimations.createParticleBurst(
-      rect.left + rect.width / 2,
-      rect.top + rect.height / 2,
-      '#10b981',
-      30
-    );
-  }
-}
-
-// ===================================
-// 3. ANALYTICS DEMONSTRATIONS
-// ===================================
-
-function demoAnalytics() {
-  console.log('📊 Demonstrating analytics...');
-  
-  // Switch to analytics view
-  switchView('analytics');
-  
-  setTimeout(() => {
-    if (window.analyticsInstance) {
-      window.analyticsInstance.calculateTrends();
-      window.analyticsInstance.generateInsights();
-      window.analyticsInstance.predictFutureTrends();
-      renderAnalyticsView();
-      showToast('Analytics updated!');
-    }
-  }, 500);
-}
-
-function printInsights() {
-  if (window.analyticsInstance) {
-    console.log('🧠 AI-Generated Insights:');
-    console.table(window.analyticsInstance.insights);
-  }
-}
-
-function printPredictions() {
-  if (window.analyticsInstance) {
-    console.log('🔮 7-Day Predictions:');
-    console.table(window.analyticsInstance.predictions);
-  }
-}
-
-// ===================================
-// 4. INTERACTIVE DEMOS
-// ===================================
-
-function cycleViews() {
-  console.log('🔄 Cycling through all views...');
-  const views = ['dashboard', 'camera', 'history', 'plans', 'analytics', 'profile'];
-  let index = 0;
-  
-  const interval = setInterval(() => {
-    switchView(views[index]);
-    index++;
-    if (index >= views.length) {
-      clearInterval(interval);
-      console.log('✅ View cycle complete!');
-      switchView('dashboard');
-    }
-  }, 2000);
-}
-
-function demoAllAnimations() {
-  console.log('🎬 Running full animation showcase...');
-  
-  // Particles
-  setTimeout(() => {
-    demoParticleEffects();
-  }, 500);
-  
-  // Confetti
-  setTimeout(() => {
-    demoConfetti();
-  }, 3000);
-  
-  // Success pulse
-  setTimeout(() => {
-    demoSuccessAnimation();
-  }, 5000);
-  
-  // View transitions
-  setTimeout(() => {
-    cycleViews();
-  }, 7000);
-}
-
-// ===================================
-// 5. STRESS TESTING
-// ===================================
-
-function stressTestParticles() {
-  console.log('⚡ Stress testing particle system...');
-  
-  for (let i = 0; i < 10; i++) {
-    setTimeout(() => {
-      window.advancedAnimations.createParticleBurst(
-        window.innerWidth / 2,
-        window.innerHeight / 2,
-        '#6366f1',
-        100
-      );
-    }, i * 100);
-  }
-  
-  console.log('💥 Particle stress test complete!');
-}
-
-function stressTestCharts() {
-  console.log('📊 Stress testing chart rendering...');
-  
-  switchView('analytics');
-  
-  setTimeout(() => {
-    for (let i = 0; i < 10; i++) {
-      setTimeout(() => {
-        if (window.analyticsInstance) {
-          window.analyticsInstance.renderCalorieTrendChart('calorie-trend-chart');
-          window.analyticsInstance.renderMacroDonutChart('macro-donut-chart');
-          window.analyticsInstance.renderWeeklyProgressChart('weekly-progress-chart');
-        }
-      }, i * 200);
-    }
-  }, 500);
-  
-  console.log('✅ Chart stress test complete!');
-}
-
-// ===================================
-// 6. ACHIEVEMENT UNLOCKING DEMO
-// ===================================
-
-function unlockAchievement(name) {
-  console.log(`🏆 Unlocking achievement: ${name}`);
-  
-  // Find achievement card
-  const cards = document.querySelectorAll('.achievement-card');
-  cards.forEach(card => {
-    if (card.textContent.includes(name)) {
-      card.classList.remove('locked');
-      card.classList.add('unlocked');
-      
-      // Trigger celebration
-      const rect = card.getBoundingClientRect();
-      window.advancedAnimations.createParticleBurst(
-        rect.left + rect.width / 2,
-        rect.top + rect.height / 2,
-        '#10b981',
-        40
-      );
-    }
-  });
-  
-  showToast(`🎉 Achievement Unlocked: ${name}!`);
-}
-
-function unlockAllAchievements() {
-  console.log('🏆 Unlocking all achievements...');
-  
-  const achievements = ['7-Day Streak', 'Protein Pro', 'Snap Master'];
-  achievements.forEach((name, i) => {
-    setTimeout(() => {
-      unlockAchievement(name);
-    }, i * 1000);
-  });
-}
-
-// ===================================
-// 7. THEME SWITCHING DEMO
-// ===================================
-
-function demoThemeSwitch() {
-  console.log('🌓 Demonstrating theme switching...');
-  
-  let isDark = document.body.classList.contains('dark-theme');
-  
-  const interval = setInterval(() => {
-    document.getElementById('theme-switch').click();
-    isDark = !isDark;
-  }, 2000);
-  
-  setTimeout(() => {
-    clearInterval(interval);
-    console.log('✅ Theme demo complete!');
-  }, 10000);
-}
-
-// ===================================
-// 8. COMPREHENSIVE DEMO
-// ===================================
-
-function runComprehensiveDemo() {
-  console.log('🎬 Starting comprehensive demo...');
-  console.log('This will take about 30 seconds...');
-  
-  const schedule = [
-    { time: 0, action: () => {
-      console.log('📝 Step 1: Loading demo data...');
-      loadDemoData();
-    }},
-    { time: 2000, action: () => {
-      console.log('✨ Step 2: Particle effects...');
-      demoParticleEffects();
-    }},
-    { time: 5000, action: () => {
-      console.log('📊 Step 3: Analytics...');
-      demoAnalytics();
-    }},
-    { time: 8000, action: () => {
-      console.log('🎉 Step 4: Confetti...');
-      demoConfetti();
-    }},
-    { time: 11000, action: () => {
-      console.log('🔄 Step 5: View cycling...');
-      cycleViews();
-    }},
-    { time: 24000, action: () => {
-      console.log('🏆 Step 6: Unlocking achievements...');
-      unlockAllAchievements();
-    }},
-    { time: 29000, action: () => {
-      console.log('✅ Demo complete!');
-      console.log('💡 Try these commands:');
-      console.log('  - demoParticleEffects()');
-      console.log('  - demoConfetti()');
-      console.log('  - demoAnalytics()');
-      console.log('  - cycleViews()');
-      console.log('  - loadDemoData()');
-      switchView('dashboard');
-    }}
-  ];
-  
-  schedule.forEach(item => {
-    setTimeout(item.action, item.time);
-  });
-}
-
-// ===================================
-// 9. PERFORMANCE TESTING
-// ===================================
-
-function measurePerformance() {
-  console.log('⚡ Measuring performance...');
-  
-  performance.mark('start');
-  
-  // Test view switching
-  const views = ['dashboard', 'camera', 'history', 'plans', 'analytics'];
-  views.forEach(view => switchView(view));
-  
-  performance.mark('views-complete');
-  performance.measure('view-switching', 'start', 'views-complete');
-  
-  // Test chart rendering
-  if (window.analyticsInstance) {
-    performance.mark('charts-start');
-    window.analyticsInstance.renderCalorieTrendChart('calorie-trend-chart');
-    window.analyticsInstance.renderMacroDonutChart('macro-donut-chart');
-    window.analyticsInstance.renderWeeklyProgressChart('weekly-progress-chart');
-    performance.mark('charts-complete');
-    performance.measure('chart-rendering', 'charts-start', 'charts-complete');
-  }
-  
-  // Print results
-  const measures = performance.getEntriesByType('measure');
-  console.table(measures.map(m => ({
-    name: m.name,
-    duration: `${m.duration.toFixed(2)}ms`
-  })));
-}
-
-// ===================================
-// 10. HELPER FUNCTIONS
-// ===================================
-
-function clearAllData() {
-  if (confirm('Clear all data? This cannot be undone.')) {
-    state.meals = [];
-    saveToLocalStorage();
-    updateDashboard();
-    renderRecentMeals();
-    renderHistory();
-    console.log('🗑️ All data cleared!');
-    showToast('All data cleared');
-  }
-}
-
-function exportData() {
-  const data = {
-    meals: state.meals,
-    plans: state.plans,
-    user: state.user,
-    exportDate: new Date().toISOString()
+  const DEMO_CONFIG = {
+    userCount: 100,
+    signalCount: 250,
+    timeRangeDays: 45,
+    categories: ['bug', 'feature', 'performance', 'ux', 'documentation'],
+    sources: ['github', 'support', 'community', 'sales', 'internal'],
+    tiers: ['enterprise', 'pro', 'free'],
+    urgencyLevels: ['low', 'medium', 'high', 'critical']
   };
-  
-  const json = JSON.stringify(data, null, 2);
-  console.log('📦 Exported data:');
-  console.log(json);
-  
-  // Create download
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `calocount-export-${Date.now()}.json`;
-  a.click();
-  
-  showToast('Data exported!');
-}
 
-function showStats() {
-  console.log('📊 App Statistics:');
-  console.log('==================');
-  console.log(`Total Meals: ${state.meals.length}`);
-  console.log(`Total Plans: ${state.plans.length}`);
-  console.log(`Active Plan: ${state.currentPlan?.name || 'None'}`);
-  
-  if (state.meals.length > 0) {
-    const totalCalories = state.meals.reduce((sum, m) => sum + m.calories, 0);
-    const avgCalories = totalCalories / state.meals.length;
-    console.log(`Average Calories per Meal: ${avgCalories.toFixed(0)}`);
+  // Realistic signal templates
+  const SIGNAL_TEMPLATES = {
+    bug: [
+      { title: 'Workers timeout under high load', impact: 85, urgency: 'critical' },
+      { title: 'KV consistency issues in EU region', impact: 78, urgency: 'high' },
+      { title: 'R2 upload fails for files >100MB', impact: 65, urgency: 'high' },
+      { title: 'Pages deployment speed regression', impact: 55, urgency: 'medium' },
+      { title: 'Dashboard loading spinner stuck', impact: 40, urgency: 'low' }
+    ],
+    feature: [
+      { title: 'TypeScript bindings for Workers KV', impact: 72, urgency: 'medium' },
+      { title: 'Native cron triggers for Workers', impact: 80, urgency: 'high' },
+      { title: 'Bulk upload API for R2', impact: 68, urgency: 'medium' },
+      { title: 'Advanced analytics dashboard', impact: 60, urgency: 'low' },
+      { title: 'Custom domain support for Pages', impact: 75, urgency: 'medium' }
+    ],
+    performance: [
+      { title: 'Workers cold start latency in APAC', impact: 82, urgency: 'critical' },
+      { title: 'R2 read throughput degradation', impact: 70, urgency: 'high' },
+      { title: 'Pages build time optimization needed', impact: 58, urgency: 'medium' },
+      { title: 'KV write performance under burst', impact: 65, urgency: 'medium' },
+      { title: 'CDN cache hit ratio declining', impact: 50, urgency: 'low' }
+    ],
+    ux: [
+      { title: 'Confusing error messages in Workers console', impact: 55, urgency: 'medium' },
+      { title: 'R2 pricing calculator unclear', impact: 45, urgency: 'low' },
+      { title: 'Pages deployment status ambiguous', impact: 50, urgency: 'medium' },
+      { title: 'Workers logs hard to filter', impact: 60, urgency: 'medium' },
+      { title: 'Onboarding flow too long', impact: 48, urgency: 'low' }
+    ],
+    documentation: [
+      { title: 'KV consistency model documentation gap', impact: 62, urgency: 'medium' },
+      { title: 'Workers AI examples outdated', impact: 52, urgency: 'low' },
+      { title: 'R2 migration guide incomplete', impact: 58, urgency: 'medium' },
+      { title: 'Pages custom headers documentation missing', impact: 54, urgency: 'low' },
+      { title: 'Workers bindings API reference unclear', impact: 48, urgency: 'low' }
+    ]
+  };
+
+  // ===================================
+  // RANDOM DATA GENERATION
+  // ===================================
+
+  function randomItem(array) {
+    return array[Math.floor(Math.random() * array.length)];
   }
-  
-  if (window.analyticsInstance) {
-    console.log(`AI Insights: ${window.analyticsInstance.insights.length}`);
-    console.log(`Predictions: ${window.analyticsInstance.predictions.length}`);
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-  
-  console.log('==================');
-}
 
-// ===================================
-// EXPORT TO WINDOW
-// ===================================
+  function randomDate(daysAgo) {
+    const now = new Date();
+    const date = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    return date.toISOString();
+  }
 
-window.demo = {
-  loadData: loadDemoData,
-  particles: demoParticleEffects,
-  confetti: demoConfetti,
-  success: demoSuccessAnimation,
-  analytics: demoAnalytics,
-  cycleViews: cycleViews,
-  allAnimations: demoAllAnimations,
-  comprehensive: runComprehensiveDemo,
-  unlockAchievement: unlockAchievement,
-  unlockAll: unlockAllAchievements,
-  themeSwitch: demoThemeSwitch,
-  performance: measurePerformance,
-  stats: showStats,
-  export: exportData,
-  clear: clearAllData,
-  insights: printInsights,
-  predictions: printPredictions,
-  stressParticles: stressTestParticles,
-  stressCharts: stressTestCharts
-};
+  function generateUserId() {
+    return `demo_user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
 
-// ===================================
-// CONSOLE WELCOME MESSAGE
-// ===================================
+  function generateSignal(daysAgo = null) {
+    const category = randomItem(DEMO_CONFIG.categories);
+    const template = randomItem(SIGNAL_TEMPLATES[category]);
+    
+    const tier = randomItem(DEMO_CONFIG.tiers);
+    const source = randomItem(DEMO_CONFIG.sources);
+    
+    // Add some randomness to impact and urgency
+    const impactVariation = randomInt(-10, 10);
+    const impact = Math.max(0, Math.min(100, template.impact + impactVariation));
+    
+    const urgencyOptions = ['low', 'medium', 'high', 'critical'];
+    const urgency = Math.random() > 0.7 ? template.urgency : randomItem(urgencyOptions);
+    
+    // Generate timestamp
+    const maxDays = daysAgo !== null ? daysAgo : DEMO_CONFIG.timeRangeDays;
+    const timestamp = randomDate(randomInt(0, maxDays));
+    
+    return {
+      id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: template.title,
+      impact,
+      urgency,
+      source,
+      category,
+      tier,
+      context: generateContext(category, tier),
+      timestamp,
+      date: timestamp.split('T')[0]
+    };
+  }
 
-console.log('%c🎯 CaloCount Pro - Demo Console', 'font-size: 20px; font-weight: bold; color: #6366f1;');
-console.log('%cTry these commands:', 'font-size: 14px; color: #8b5cf6;');
-console.log('');
-console.log('🎬 Full Demo:');
-console.log('  demo.comprehensive()        - Run full 30-second demo');
-console.log('');
-console.log('✨ Animations:');
-console.log('  demo.particles()            - Particle burst effects');
-console.log('  demo.confetti()             - Confetti celebration');
-console.log('  demo.success()              - Success animation');
-console.log('  demo.allAnimations()        - All animation types');
-console.log('');
-console.log('📊 Analytics:');
-console.log('  demo.analytics()            - Show analytics dashboard');
-console.log('  demo.insights()             - Print AI insights');
-console.log('  demo.predictions()          - Print predictions');
-console.log('');
-console.log('🎮 Interactive:');
-console.log('  demo.cycleViews()           - Cycle through all views');
-console.log('  demo.themeSwitch()          - Demonstrate theme switching');
-console.log('  demo.unlockAll()            - Unlock all achievements');
-console.log('');
-console.log('📦 Data:');
-console.log('  demo.loadData()             - Load 14 days of demo data');
-console.log('  demo.stats()                - Show app statistics');
-console.log('  demo.export()               - Export data as JSON');
-console.log('  demo.clear()                - Clear all data');
-console.log('');
-console.log('⚡ Performance:');
-console.log('  demo.performance()          - Measure performance');
-console.log('  demo.stressParticles()      - Stress test particles');
-console.log('  demo.stressCharts()         - Stress test charts');
-console.log('');
-console.log('%c💡 Start with: demo.comprehensive()', 'font-size: 16px; font-weight: bold; color: #10b981;');
+  function generateContext(category, tier) {
+    const contexts = {
+      bug: [
+        'Reported by multiple customers, affecting production workloads',
+        'Intermittent issue, happens under specific load conditions',
+        'Blocking deployment for affected customers',
+        'Workaround available but not ideal',
+        'Critical path for enterprise customers'
+      ],
+      feature: [
+        'Highly requested in community forums',
+        'Competitive feature gap identified',
+        'Would enable new use cases for customers',
+        'Requested by sales for enterprise deals',
+        'Developer experience improvement'
+      ],
+      performance: [
+        'Degradation observed over past 2 weeks',
+        'Affecting customers in specific regions',
+        'Impact on SLA compliance',
+        'Related to recent infrastructure changes',
+        'Customer churn risk if not addressed'
+      ],
+      ux: [
+        'User confusion reported in support tickets',
+        'Low task completion rate in analytics',
+        'Feedback from user research sessions',
+        'Accessibility concerns raised',
+        'Mobile experience particularly affected'
+      ],
+      documentation: [
+        'Gap identified in customer onboarding',
+        'Causing support ticket volume increase',
+        'Requested by developer community',
+        'Blocking self-service adoption',
+        'Migration guide needed for customers'
+      ]
+    };
+    
+    const tierContext = tier === 'enterprise' 
+      ? ' [Enterprise customer impact]'
+      : tier === 'pro' 
+        ? ' [Pro tier customer]'
+        : '';
+    
+    return randomItem(contexts[category] || contexts.bug) + tierContext;
+  }
 
-// Auto-load demo data if no meals exist
-if (state.meals.length === 0) {
-  console.log('%c📝 No data found. Loading demo data...', 'color: #f59e0b;');
-  setTimeout(() => {
-    loadDemoData();
-  }, 2000);
-}
+  // ===================================
+  // DEMO SCENARIOS
+  // ===================================
+
+  const demoScenarios = {
+    // Scenario 1: Normal week
+    normalWeek: {
+      name: 'Normal Week',
+      description: 'Typical week of customer feedback with balanced distribution',
+      generate: () => {
+        const signals = [];
+        for (let i = 0; i < 35; i++) {
+          signals.push(generateSignal(7));
+        }
+        return signals;
+      }
+    },
+
+    // Scenario 2: Incident spike
+    incidentSpike: {
+      name: 'Incident Spike',
+      description: 'Major outage causes spike in critical bug reports',
+      generate: () => {
+        const signals = [];
+        
+        // Background signals
+        for (let i = 0; i < 20; i++) {
+          signals.push(generateSignal(14));
+        }
+        
+        // Incident-related critical bugs (last 2 days)
+        const incidentSignals = [
+          'Workers API timeout in all regions',
+          'KV data inconsistency affecting writes',
+          'R2 upload endpoint returning 500 errors',
+          'Pages deployments failing silently',
+          'Workers AI inference errors',
+          'CDN cache purge not working',
+          'Dashboard authentication issues',
+          'Billing API returning incorrect data'
+        ];
+        
+        incidentSignals.forEach(title => {
+          signals.push({
+            id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            title,
+            impact: randomInt(80, 95),
+            urgency: 'critical',
+            source: randomItem(['support', 'internal', 'community']),
+            category: 'bug',
+            tier: randomItem(['enterprise', 'pro', 'free']),
+            context: 'Part of platform-wide incident - immediate investigation required',
+            timestamp: randomDate(randomInt(0, 2)),
+            date: randomDate(randomInt(0, 2)).split('T')[0]
+          });
+        });
+        
+        return signals;
+      }
+    },
+
+    // Scenario 3: Feature request wave
+    featureWave: {
+      name: 'Feature Request Wave',
+      description: 'Post-conference surge in feature requests',
+      generate: () => {
+        const signals = [];
+        
+        // Recent feature requests (last 3 days)
+        const features = [
+          'GraphQL API for Workers',
+          'WebSocket support in Workers',
+          'A/B testing framework for Pages',
+          'Multi-region replication for R2',
+          'Scheduled jobs for Workers',
+          'Custom analytics integration',
+          'Terraform provider improvements',
+          'Realtime collaboration features',
+          'Advanced caching controls',
+          'Image optimization pipeline'
+        ];
+        
+        features.forEach(title => {
+          signals.push({
+            id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            title,
+            impact: randomInt(60, 80),
+            urgency: randomItem(['medium', 'high']),
+            source: randomItem(['community', 'sales', 'github']),
+            category: 'feature',
+            tier: randomItem(['enterprise', 'pro', 'free']),
+            context: 'Post-conference feedback - high developer interest',
+            timestamp: randomDate(randomInt(0, 3)),
+            date: randomDate(randomInt(0, 3)).split('T')[0]
+          });
+        });
+        
+        // Background signals
+        for (let i = 0; i < 25; i++) {
+          signals.push(generateSignal(30));
+        }
+        
+        return signals;
+      }
+    },
+
+    // Scenario 4: Performance degradation
+    performanceDegradation: {
+      name: 'Performance Degradation',
+      description: 'Gradual performance issues across regions',
+      generate: () => {
+        const signals = [];
+        
+        // Background signals
+        for (let i = 0; i < 15; i++) {
+          signals.push(generateSignal(30));
+        }
+        
+        // Performance issues (increasing over time)
+        const regions = ['APAC', 'EU', 'US-East', 'US-West'];
+        regions.forEach(region => {
+          for (let i = 0; i < 4; i++) {
+            signals.push({
+              id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              title: `${randomItem(['Workers', 'R2', 'KV'])} latency spike in ${region}`,
+              impact: randomInt(65, 85),
+              urgency: randomItem(['high', 'critical']),
+              source: randomItem(['support', 'internal']),
+              category: 'performance',
+              tier: randomItem(['enterprise', 'pro']),
+              context: `${region} region showing degraded performance metrics`,
+              timestamp: randomDate(randomInt(0, 14)),
+              date: randomDate(randomInt(0, 14)).split('T')[0]
+            });
+          }
+        });
+        
+        return signals;
+      }
+    },
+
+    // Scenario 5: Enterprise focus
+    enterpriseFocus: {
+      name: 'Enterprise Customer Focus',
+      description: 'High-impact enterprise customer feedback requiring immediate attention',
+      generate: () => {
+        const signals = [];
+        
+        // Enterprise-specific issues
+        const enterpriseIssues = [
+          { title: 'SSO integration broken for Fortune 500 client', impact: 95, urgency: 'critical', category: 'bug' },
+          { title: 'Custom SLA reporting needed for compliance', impact: 88, urgency: 'high', category: 'feature' },
+          { title: 'Multi-tenant isolation concerns raised', impact: 92, urgency: 'critical', category: 'bug' },
+          { title: 'Advanced audit logging for SOC2', impact: 85, urgency: 'high', category: 'feature' },
+          { title: 'Dedicated support channel latency', impact: 78, urgency: 'high', category: 'ux' },
+          { title: 'Enterprise migration documentation gaps', impact: 75, urgency: 'medium', category: 'documentation' }
+        ];
+        
+        enterpriseIssues.forEach(issue => {
+          signals.push({
+            id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            title: issue.title,
+            impact: issue.impact,
+            urgency: issue.urgency,
+            source: randomItem(['sales', 'support', 'internal']),
+            category: issue.category,
+            tier: 'enterprise',
+            context: 'Enterprise customer - revenue impact if not resolved quickly',
+            timestamp: randomDate(randomInt(0, 7)),
+            date: randomDate(randomInt(0, 7)).split('T')[0]
+          });
+        });
+        
+        // Mixed background signals
+        for (let i = 0; i < 30; i++) {
+          signals.push(generateSignal(30));
+        }
+        
+        return signals;
+      }
+    }
+  };
+
+  // ===================================
+  // DEMO BENCHMARKS
+  // ===================================
+
+  function generateDemoBenchmarks() {
+    return [
+      {
+        id: 'benchmark_reliability',
+        name: 'Reliability Baseline',
+        targetImpact: 2000,
+        customerTierWeight: {
+          enterprise: 3,
+          pro: 2,
+          free: 1
+        },
+        active: true
+      },
+      {
+        id: 'benchmark_growth',
+        name: 'Growth Target',
+        targetImpact: 2500,
+        customerTierWeight: {
+          enterprise: 3,
+          pro: 2,
+          free: 1
+        },
+        active: false
+      },
+      {
+        id: 'benchmark_enterprise',
+        name: 'Enterprise Excellence',
+        targetImpact: 1800,
+        customerTierWeight: {
+          enterprise: 5,
+          pro: 2,
+          free: 0.5
+        },
+        active: false
+      }
+    ];
+  }
+
+  // ===================================
+  // DEMO EXECUTION
+  // ===================================
+
+  function loadDemoScenario(scenarioName) {
+    const scenario = demoScenarios[scenarioName];
+    
+    if (!scenario) {
+      console.error('Unknown scenario:', scenarioName);
+      console.log('Available scenarios:', Object.keys(demoScenarios));
+      return;
+    }
+
+    console.log(`\n📊 Loading Demo: ${scenario.name}`);
+    console.log(`Description: ${scenario.description}\n`);
+
+    // Generate signals
+    const signals = scenario.generate();
+    
+    // Update global state
+    if (window.state) {
+      window.state.signals = signals;
+      
+      // Update benchmarks if needed
+      if (!window.state.benchmarks || window.state.benchmarks.length === 0) {
+        window.state.benchmarks = generateDemoBenchmarks();
+      }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('signalboard_state', JSON.stringify(window.state));
+      } catch (error) {
+        console.warn('Failed to save demo data to localStorage');
+      }
+    }
+
+    console.log(`✓ Generated ${signals.length} signals`);
+    console.log(`✓ Time range: ${DEMO_CONFIG.timeRangeDays} days`);
+    
+    // Show signal distribution
+    const distribution = signals.reduce((acc, signal) => {
+      acc[signal.category] = (acc[signal.category] || 0) + 1;
+      return acc;
+    }, {});
+    
+    console.log('\nSignal Distribution:');
+    console.table(distribution);
+    
+    // Show urgency distribution
+    const urgencyDist = signals.reduce((acc, signal) => {
+      acc[signal.urgency] = (acc[signal.urgency] || 0) + 1;
+      return acc;
+    }, {});
+    
+    console.log('\nUrgency Distribution:');
+    console.table(urgencyDist);
+
+    // Refresh UI
+    if (window.updateDashboard) window.updateDashboard();
+    if (window.renderRecentSignals) window.renderRecentSignals();
+    if (window.renderAnalyticsView) window.renderAnalyticsView();
+    if (window.renderPMMetrics) window.renderPMMetrics();
+    
+    console.log('\n✓ Demo scenario loaded successfully');
+    console.log('→ Navigate to different views to see the data\n');
+  }
+
+  function generateRandomSignals(count = 50) {
+    console.log(`\n📊 Generating ${count} random signals...\n`);
+    
+    const signals = [];
+    for (let i = 0; i < count; i++) {
+      signals.push(generateSignal());
+    }
+    
+    if (window.state) {
+      window.state.signals = signals;
+      
+      try {
+        localStorage.setItem('signalboard_state', JSON.stringify(window.state));
+      } catch (error) {
+        console.warn('Failed to save to localStorage');
+      }
+    }
+    
+    console.log(`✓ Generated ${count} signals`);
+    
+    // Refresh UI
+    if (window.updateDashboard) window.updateDashboard();
+    if (window.renderRecentSignals) window.renderRecentSignals();
+    
+    console.log('✓ UI refreshed\n');
+  }
+
+  function clearAllData() {
+    if (!confirm('Are you sure you want to clear all demo data?')) {
+      return;
+    }
+    
+    console.log('\n🗑️  Clearing all data...\n');
+    
+    if (window.state) {
+      window.state.signals = [];
+      window.state.benchmarks = generateDemoBenchmarks();
+    }
+    
+    try {
+      localStorage.removeItem('signalboard_state');
+      localStorage.removeItem('signalboard_analytics_events');
+    } catch (error) {
+      console.warn('Failed to clear localStorage');
+    }
+    
+    // Refresh UI
+    if (window.updateDashboard) window.updateDashboard();
+    if (window.renderRecentSignals) window.renderRecentSignals();
+    
+    console.log('✓ All data cleared\n');
+  }
+
+  function showDemoHelp() {
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║            SIGNALBOARD DEMO CONSOLE                        ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
+    
+    console.log('📊 AVAILABLE SCENARIOS:\n');
+    Object.entries(demoScenarios).forEach(([key, scenario]) => {
+      console.log(`  signalboardDemo.load('${key}')`);
+      console.log(`  → ${scenario.description}\n`);
+    });
+    
+    console.log('🛠️  UTILITY COMMANDS:\n');
+    console.log('  signalboardDemo.generate(50)');
+    console.log('  → Generate 50 random signals\n');
+    
+    console.log('  signalboardDemo.clear()');
+    console.log('  → Clear all demo data\n');
+    
+    console.log('  signalboardDemo.help()');
+    console.log('  → Show this help message\n');
+    
+    console.log('💡 QUICK START:\n');
+    console.log('  1. signalboardDemo.load("normalWeek")');
+    console.log('  2. Navigate to different views to explore the data');
+    console.log('  3. Try other scenarios to see different patterns\n');
+  }
+
+  // ===================================
+  // GLOBAL API
+  // ===================================
+
+  window.signalboardDemo = {
+    load: loadDemoScenario,
+    generate: generateRandomSignals,
+    clear: clearAllData,
+    help: showDemoHelp,
+    scenarios: Object.keys(demoScenarios),
+    config: DEMO_CONFIG
+  };
+
+  // ===================================
+  // AUTO-INIT
+  // ===================================
+
+  console.log('\n✨ SignalBoard Demo Module Loaded');
+  console.log('→ Type signalboardDemo.help() for usage instructions\n');
+
+})();
